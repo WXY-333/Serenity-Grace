@@ -1,8 +1,8 @@
 /**
  * Theme: theme-Serenity
  * Author: Serenity
- * Build: 2026-09-06 17:19:05
- * Fingerprint: aadec520d901c075
+ * Build: 2026-10-01 20:34:46
+ * Fingerprint: 9ac9d5b43683cf67
  * Copyright (c) 2026 Serenity. All rights reserved.
  */
 
@@ -28,13 +28,20 @@
   var postsData = [];
   var searchTimeout = null;
   var dataLoaded = false;
+  var loadPromise = null;
+  var lastFocusedElement = null;
+  var POSTS_PAGE_SIZE = 100;
   
   // 缓存 DOM 元素
   var modalEl, inputEl, resultsEl, searchBoxEl;
   
   window.openSearchModal = function() {
     if (modalEl && inputEl) {
+      if (!modalEl.classList.contains('active')) {
+        lastFocusedElement = document.activeElement;
+      }
       modalEl.classList.add('active');
+      modalEl.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
       requestAnimationFrame(function() { inputEl.focus(); });
       // 打开搜索框时加载数据
@@ -46,10 +53,16 @@
   
   window.closeSearchModal = function() {
     if (modalEl && inputEl && resultsEl) {
+      var wasOpen = modalEl.classList.contains('active');
       modalEl.classList.remove('active');
+      modalEl.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
       inputEl.value = '';
       resultsEl.innerHTML = '<div class="search-empty">输入关键词开始搜索<\/div>';
+      if (wasOpen && lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+        lastFocusedElement.focus();
+      }
+      lastFocusedElement = null;
     }
   };
   
@@ -83,27 +96,70 @@
     });
   }
   
-  function loadPostsData() {
-    fetch('/apis/api.content.halo.run/v1alpha1/posts?page=1&size=100')
-      .then(function(response) { return response.json(); })
-      .then(function(data) {
-        if (data && data.items) {
-          postsData = data.items.map(function(post) {
-            return {
-              title: post.spec && post.spec.title || '',
-              excerpt: post.status && post.status.excerpt || '',
-              url: post.status && post.status.permalink || '#'
-            };
-          });
-          dataLoaded = true;
-        }
+  function mapPosts(items) {
+    return items.map(function(post) {
+      return {
+        title: post.spec && post.spec.title || '',
+        excerpt: post.status && post.status.excerpt || '',
+        url: post.status && post.status.permalink || '#'
+      };
+    });
+  }
+
+  function fetchPostsPage(page) {
+    var params = new URLSearchParams({
+      page: String(page),
+      size: String(POSTS_PAGE_SIZE)
+    });
+    return fetch('/apis/api.content.halo.run/v1alpha1/posts?' + params.toString())
+      .then(function(response) {
+        if (!response.ok) throw new Error('Failed to load posts');
+        return response.json();
       })
-      .catch(function() {});
+      .then(function(data) {
+        var items = data && Array.isArray(data.items) ? data.items : [];
+        postsData = postsData.concat(mapPosts(items));
+
+        var totalPages = Number(data && data.totalPages || 0);
+        var hasNext = data && data.hasNext === true;
+        if (data && data.hasNext === undefined) {
+          hasNext = totalPages > 0 ? page < totalPages : items.length === POSTS_PAGE_SIZE;
+        }
+        return hasNext ? fetchPostsPage(page + 1) : postsData;
+      });
+  }
+
+  function loadPostsData() {
+    if (dataLoaded) return Promise.resolve(postsData);
+    if (loadPromise) return loadPromise;
+
+    postsData = [];
+    loadPromise = fetchPostsPage(1).then(function() {
+      dataLoaded = true;
+      return postsData;
+    }, function() {
+      postsData = [];
+      dataLoaded = false;
+      loadPromise = null;
+      return postsData;
+    });
+    return loadPromise;
   }
   
   function handleSearch(keyword) {
     if (!keyword) {
       resultsEl.innerHTML = '<div class="search-empty">输入关键词开始搜索<\/div>';
+      return;
+    }
+
+    if (!dataLoaded) {
+      resultsEl.innerHTML = '<div class="search-loading">正在加载文章...<\/div>';
+      loadPostsData().then(function() {
+        var currentKeyword = inputEl ? inputEl.value.trim() : '';
+        if (!currentKeyword) return;
+        if (dataLoaded) handleSearch(currentKeyword);
+        else resultsEl.innerHTML = '<div class="search-empty">文章加载失败，请稍后重试<\/div>';
+      });
       return;
     }
     
@@ -141,6 +197,21 @@
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         openSearchModal();
+      }
+      if (e.key === 'Tab' && modalEl && modalEl.classList.contains('active')) {
+        var focusable = Array.prototype.slice.call(
+          modalEl.querySelectorAll('input, button, a[href], [tabindex]:not([tabindex="-1"])')
+        ).filter(function(element) { return !element.disabled && element.offsetParent !== null; });
+        if (!focusable.length) return;
+        var first = focusable[0];
+        var last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     });
     

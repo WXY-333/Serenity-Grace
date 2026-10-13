@@ -1,8 +1,8 @@
 /*
  * Theme: theme-Serenity
  * Author: Serenity
- * Build: 2026-09-06 17:19:05
- * Fingerprint: aadec520d901c075
+ * Build: 2026-10-01 20:34:46
+ * Fingerprint: 9ac9d5b43683cf67
  * Copyright (c) 2026 Serenity. All rights reserved.
  */
 
@@ -113,7 +113,7 @@ html, body {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(139, 92, 246, 0.08);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.08);
   box-shadow:
     0 10px 30px -10px rgba(0, 0, 0, 0.03),
     0 20px 50px -20px rgba(0, 0, 0, 0.05);

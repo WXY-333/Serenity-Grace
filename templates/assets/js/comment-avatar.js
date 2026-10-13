@@ -1,8 +1,8 @@
 /**
  * Theme: theme-Serenity
  * Author: Serenity
- * Build: 2026-09-06 17:19:05
- * Fingerprint: aadec520d901c075
+ * Build: 2026-10-01 20:34:46
+ * Fingerprint: 9ac9d5b43683cf67
  * Copyright (c) 2026 Serenity. All rights reserved.
  */
 
@@ -41,6 +41,16 @@
     return item?.owner?.kind || '';
   }
 
+  function sanitizeHttpUrl(value) {
+    if (typeof value !== 'string' || !value.trim()) return '';
+    try {
+      const url = new URL(value.trim(), window.location.origin);
+      return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : '';
+    } catch (error) {
+      return '';
+    }
+  }
+
   function withSeedParam(url, seed) {
     return `${url}${url.includes('?') ? '&' : '?'}_avatar=${encodeURIComponent(seed)}`;
   }
@@ -54,12 +64,12 @@
     }
 
     if (/\{(?:hash|seed)\}/.test(source)) {
-      return source
+      return sanitizeHttpUrl(source
         .replace(/\{hash\}/g, encodeURIComponent(safeSeed))
-        .replace(/\{seed\}/g, encodeURIComponent(safeSeed));
+        .replace(/\{seed\}/g, encodeURIComponent(safeSeed)));
     }
 
-    return withSeedParam(source, safeSeed);
+    return sanitizeHttpUrl(withSeedParam(source, safeSeed));
   }
 
   function resolveProviderAvatar(config, seed) {
@@ -72,7 +82,7 @@
     }
 
     const baseUrl = (mirror || 'https://gravatar.com').replace(/\/+$/, '');
-    return `${baseUrl}/avatar/${seed || ''}`;
+    return sanitizeHttpUrl(`${baseUrl}/avatar/${seed || ''}`);
   }
 
   async function fetchConfig() {
@@ -85,7 +95,7 @@
   }
 
   async function resolveCommentAvatar(item) {
-    const ownerAvatar = getOwnerAvatar(item);
+    const ownerAvatar = sanitizeHttpUrl(getOwnerAvatar(item));
     const config = await fetchConfig();
     const avatarConfig = config?.avatar;
 
@@ -115,5 +125,6 @@
 
   window.SerenityCommentAvatar = {
     resolve: resolveCommentAvatar,
+    sanitizeUrl: sanitizeHttpUrl,
   };
 })();

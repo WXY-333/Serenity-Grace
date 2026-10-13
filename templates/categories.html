@@ -2,8 +2,8 @@
 <!--
   Theme: theme-Serenity
   Author: Serenity
-  Build: 2026-09-06 17:19:05
-  Fingerprint: aadec520d901c075
+  Build: 2026-10-01 20:34:46
+  Fingerprint: 9ac9d5b43683cf67
   Copyright (c) 2026 Serenity. All rights reserved.
 -->
 
@@ -33,10 +33,9 @@
     <header class="page-header" data-aos="fade-up">
       <h1 class="page-title" th:text="${(theme.config.watermark?.categories?.enabled == true ? theme.config.watermark.categories.title : null) ?: '分类'}">分类</h1>
       <p class="page-desc" th:text="${(theme.config.watermark?.categories?.enabled == true ? theme.config.watermark.categories.subtitle : null) ?: '按分类浏览全部内容'}">按分类浏览全部内容</p>
-      <p class="page-desc" th:if="${not #lists.isEmpty(categories)}">
-        共 <span th:text="${#lists.size(categories)}">6</span> 个分类
+      <p class="page-desc">
+        共 <span th:text="${#lists.size(categories)}"></span> 个分类
       </p>
-      <p class="page-desc" th:unless="${not #lists.isEmpty(categories)}">共 6 个分类</p>
     </header>
 
     <div class="categories-list">

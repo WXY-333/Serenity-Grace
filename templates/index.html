@@ -2,8 +2,8 @@
 <!--
   Theme: theme-Serenity
   Author: Serenity
-  Build: 2026-09-06 17:19:05
-  Fingerprint: aadec520d901c075
+  Build: 2026-10-01 20:34:46
+  Fingerprint: 9ac9d5b43683cf67
   Copyright (c) 2026 Serenity. All rights reserved.
 -->
 
@@ -79,7 +79,9 @@
                  alt=""
                  decoding="async"
                  fetchpriority="low"
-                 th:attr="data-light=${lightBg},data-dark=${darkBg},data-default-light=@{/assets/public/lightbg.webp},data-default-dark=@{/assets/public/darkbg.webp}" />
+                 th:attr="data-light=${lightBg},data-dark=${darkBg},data-default-light=@{/assets/public/lightbg.webp},data-default-dark=@{/assets/public/darkbg.webp}"
+                 th:data-mobile-light="${theme.config.home != null and theme.config.home.backgroundConfig != null ? theme.config.home.backgroundConfig.heroBackgroundMobileLight : ''}"
+                 th:data-mobile-dark="${theme.config.home != null and theme.config.home.backgroundConfig != null ? theme.config.home.backgroundConfig.heroBackgroundMobileDark : ''}" />
             <video class="hero-background-img hero-bg-theme-video"
                    style="display:none"
                    autoplay
@@ -112,9 +114,15 @@
             }
 
             function themeUrl(theme) {
-              var selected = theme === 'light' ? img.getAttribute('data-light') : img.getAttribute('data-dark');
+              var desktop = theme === 'light' ? img.getAttribute('data-light') : img.getAttribute('data-dark');
+              var mobile = theme === 'light' ? img.getAttribute('data-mobile-light') : img.getAttribute('data-mobile-dark');
+              var selected = isMobileViewport() ? (mobile || desktop) : desktop;
               var fallback = defaultUrl(theme);
               return selected || fallback || '';
+            }
+
+            function isMobileViewport() {
+              return window.matchMedia ? window.matchMedia('(max-width: 768px)').matches : window.innerWidth <= 768;
             }
 
             function resetVideo() {
@@ -165,6 +173,19 @@
                 useImage(url);
               }
             }
+
+            if (window.__homeThemeBgResizeHandler) {
+              window.removeEventListener('resize', window.__homeThemeBgResizeHandler);
+            }
+            var wasMobileViewport = isMobileViewport();
+            window.__homeThemeBgResizeHandler = function() {
+              var isMobile = isMobileViewport();
+              if (isMobile !== wasMobileViewport) {
+                wasMobileViewport = isMobile;
+                applyThemeBackground();
+              }
+            };
+            window.addEventListener('resize', window.__homeThemeBgResizeHandler);
 
             img.addEventListener('load', function() {
               img.classList.add('loaded');

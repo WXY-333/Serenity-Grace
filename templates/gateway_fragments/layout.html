@@ -86,9 +86,12 @@
                th:data-api-mobile="${theme.config.home.backgroundConfig.heroBackgroundApiMobile}" />
         </th:block>
         <th:block th:unless="${hasApi}">
-          <th:block th:with="bgUrl = ${(theme.config.home != null and theme.config.home.backgroundConfig != null and theme.config.home.backgroundConfig.heroBackground != null and not #strings.isEmpty(theme.config.home.backgroundConfig.heroBackground)) ? theme.config.home.backgroundConfig.heroBackground : '/themes/theme-Serenity/assets/public/labixiaoxi.webp'}">
-            <img th:unless="${#strings.endsWith(#strings.toLowerCase(bgUrl), '.mp4') || #strings.endsWith(#strings.toLowerCase(bgUrl), '.webm')}"
-                 th:src="${bgUrl}" alt="" class="gateway-wallpaper-img loaded" />
+          <th:block th:with="legacyBg = ${(theme.config.home != null and theme.config.home.backgroundConfig != null and theme.config.home.backgroundConfig.heroBackground != null and not #strings.isEmpty(theme.config.home.backgroundConfig.heroBackground)) ? theme.config.home.backgroundConfig.heroBackground : ''},
+                             lightBg = ${(theme.config.home != null and theme.config.home.backgroundConfig != null and theme.config.home.backgroundConfig.heroBackgroundLight != null and not #strings.isEmpty(theme.config.home.backgroundConfig.heroBackgroundLight)) ? theme.config.home.backgroundConfig.heroBackgroundLight : (!#strings.isEmpty(legacyBg) ? legacyBg : '/themes/theme-Serenity/assets/public/lightbg.webp')},
+                             darkBg = ${(theme.config.home != null and theme.config.home.backgroundConfig != null and theme.config.home.backgroundConfig.heroBackgroundDark != null and not #strings.isEmpty(theme.config.home.backgroundConfig.heroBackgroundDark)) ? theme.config.home.backgroundConfig.heroBackgroundDark : (!#strings.isEmpty(legacyBg) ? legacyBg : '/themes/theme-Serenity/assets/public/darkbg.webp')}">
+            <span class="gateway-wallpaper-source" th:attr="data-light=${lightBg},data-dark=${darkBg}" hidden></span>
+            <img id="gateway-wallpaper-img" alt="" class="gateway-wallpaper-img" hidden />
+            <video id="gateway-wallpaper-video" class="gateway-wallpaper-img" muted autoplay loop playsinline hidden></video>
           </th:block>
         </th:block>
       </div>
@@ -98,8 +101,49 @@
           if (wrap) document.body.classList.add('has-gateway-wallpaper');
           var img = document.getElementById('gateway-wallpaper-img');
           if (!img) img = document.querySelector('.gateway-wallpaper-img');
+          var video = document.getElementById('gateway-wallpaper-video');
           if (!img) return;
           var api = img.getAttribute('data-api');
+          function hideWallpaper() {
+            wrap.style.display = 'none';
+            document.body.classList.remove('has-gateway-wallpaper');
+          }
+          function isVideoUrl(url) {
+            var pathname = String(url || '').split(/[?#]/, 1)[0].toLowerCase();
+            return pathname.endsWith('.mp4') || pathname.endsWith('.webm');
+          }
+          function showConfiguredMedia(url) {
+            if (!url) {
+              hideWallpaper();
+              return;
+            }
+            if (video && isVideoUrl(url)) {
+              img.hidden = true;
+              video.hidden = false;
+              video.src = url;
+              video.onloadeddata = function() { video.classList.add('loaded'); };
+              video.onerror = hideWallpaper;
+              var playPromise = video.play();
+              if (playPromise && typeof playPromise.catch === 'function') playPromise.catch(function() {});
+              return;
+            }
+            if (video) {
+              video.pause();
+              video.hidden = true;
+              video.removeAttribute('src');
+            }
+            img.hidden = false;
+            img.onload = function() { img.classList.add('loaded'); };
+            img.onerror = hideWallpaper;
+            img.src = url;
+          }
+          if (!api) {
+            var scheme = document.documentElement.getAttribute('data-theme') || 'dark';
+            var source = wrap.querySelector('.gateway-wallpaper-source');
+            var themedUrl = source ? source.getAttribute(scheme === 'light' ? 'data-light' : 'data-dark') : '';
+            showConfiguredMedia(themedUrl);
+            return;
+          }
           if (api) {
             var CACHE_KEY = 'serenity_gw_wallpaper_url';
             var SESSION_KEY = 'serenity_gw_wallpaper_session';
@@ -118,8 +162,7 @@
                 sessionStorage.removeItem(CACHE_KEY);
                 img.src = (isMobile && apiMobile) ? apiMobile : api;
               } else {
-                wrap.style.display = 'none';
-                document.body.classList.remove('has-gateway-wallpaper');
+                hideWallpaper();
               }
             };
           }
@@ -184,7 +227,7 @@
     </div>
 
     <!-- ANI 动态鼠标指针 (Hue 定制) -->
-    <script th:src="@{/assets/js/cursor-init.js}"></script>
+    <script th:if="${theme.config.basic == null or theme.config.basic.cursorConfig == null or theme.config.basic.cursorConfig.enabled == null or theme.config.basic.cursorConfig.enabled}" th:src="@{/assets/js/cursor-init.js}"></script>
 
     <!-- 页脚 -->
     <div class="gateway-footer">

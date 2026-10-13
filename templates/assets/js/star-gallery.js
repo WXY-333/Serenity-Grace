@@ -1,8 +1,8 @@
 /**
  * Theme: theme-Serenity
  * Author: Serenity
- * Build: 2026-09-06 17:19:05
- * Fingerprint: aadec520d901c075
+ * Build: 2026-10-01 20:34:46
+ * Fingerprint: 9ac9d5b43683cf67
  * Copyright (c) 2026 Serenity. All rights reserved.
  */
 
@@ -101,6 +101,16 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+  }
+
+  function safeNavigationUrl(value) {
+    if (typeof value !== 'string' || !value.trim()) return '';
+    try {
+      const url = new URL(value.trim(), window.location.origin);
+      return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : '';
+    } catch (error) {
+      return '';
+    }
   }
 
   function setText(id, value) {
@@ -230,8 +240,11 @@
       };
     }
     if (link) {
+      const profileUrl = safeNavigationUrl(profile.orbitUrl || profile.orbitURL || profile.hubOrbitUrl || profile.siteUrl);
       link.textContent = '访问星系';
-      link.href = profile.orbitUrl || profile.orbitURL || profile.hubOrbitUrl || profile.siteUrl || '#';
+      link.hidden = !profileUrl;
+      if (profileUrl) link.href = profileUrl;
+      else link.removeAttribute('href');
     }
 
     const displayName = available ? (profile.constellation || profile.siteName) : '';
@@ -805,10 +818,10 @@
     timeline.classList.remove('is-empty');
     timeline.innerHTML = posts.map((post) => {
       const sourceName = post.nodeName || post.siteName || post.source || '星际资讯';
-      const url = post.url || '#';
-      const canOpen = url !== '#';
-      const siteUrl = post.siteUrl || post.url || '#';
-      const canLocate = siteUrl !== '#';
+      const url = safeNavigationUrl(post.url);
+      const canOpen = Boolean(url);
+      const siteUrl = safeNavigationUrl(post.siteUrl || post.url);
+      const canLocate = Boolean(siteUrl);
       const postType = String(post.type || '').toLowerCase();
       const isArticle = postType === 'rss' || postType === 'article' || postType === 'post';
       const postTitle = post.title || '捕捉到新的深空资讯';
@@ -951,6 +964,7 @@
     const profile = modal.querySelector('#starSectorDialogProfile');
     const head = modal.querySelector('#starSectorDialogHead');
     const feed = modal.querySelector('#starSectorDialogFeed');
+    const sectorUrl = safeNavigationUrl(item.url);
 
     profile.innerHTML = `
       <div class="star-sector-dialog-headline">
@@ -967,7 +981,7 @@
         <span><em>可信</em><strong>${escapeHtml(formatScore(item.trust))}</strong></span>
         <span><em>星球</em><strong>${escapeHtml(integer(item.friendCount))} 个</strong></span>
       </div>
-      ${item.url ? `<a class="star-sector-dialog-link" href="${escapeHtml(item.url)}" target="_blank" rel="noopener">访问星系</a>` : ''}
+      ${sectorUrl ? `<a class="star-sector-dialog-link" href="${escapeHtml(sectorUrl)}" target="_blank" rel="noopener noreferrer">访问星系</a>` : ''}
       <div class="star-sector-dialog-dates">
         <span><em>加入</em> <strong>${escapeHtml(formatDate(item.joinedAt))}</strong></span>
         <span><em>活跃</em> <strong>${escapeHtml(formatDate(item.activeAt))}</strong></span>

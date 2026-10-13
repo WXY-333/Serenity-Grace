@@ -1,8 +1,8 @@
 /*
  * Theme: theme-Serenity
  * Author: Serenity
- * Build: 2026-09-06 17:19:05
- * Fingerprint: aadec520d901c075
+ * Build: 2026-10-01 20:34:46
+ * Fingerprint: 9ac9d5b43683cf67
  * Copyright (c) 2026 Serenity. All rights reserved.
  */
 
@@ -49,7 +49,7 @@
 }
 
 .music-panel-inner {
-  background: var(--color-accent, #c084fc);
+  background: var(--color-accent);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -349,5 +349,4 @@
   width: 70%;
   transition: width 0.1s;
 }
-
 

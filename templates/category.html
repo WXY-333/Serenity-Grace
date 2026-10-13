@@ -2,8 +2,8 @@
 <!--
   Theme: theme-Serenity
   Author: Serenity
-  Build: 2026-09-06 17:19:05
-  Fingerprint: aadec520d901c075
+  Build: 2026-10-01 20:34:46
+  Fingerprint: 9ac9d5b43683cf67
   Copyright (c) 2026 Serenity. All rights reserved.
 -->
 
@@ -59,8 +59,7 @@
           <span class="category-title-icon" th:data-slug="${category.spec.slug}"></span>
           <span th:text="${category.spec.displayName}">技术分享</span>
         </h1>
-        <p class="page-desc" th:if="${posts.total}">共 <span th:text="${posts.total}">18</span> 篇文章</p>
-        <p class="page-desc" th:unless="${posts.total}">共 18 篇文章</p>
+        <p class="page-desc">共 <span th:text="${posts.total}"></span> 篇文章</p>
       </header>
       <script th:inline="javascript">
         (function() {

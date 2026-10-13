@@ -1,8 +1,8 @@
 /**
  * Theme: theme-Serenity
  * Author: Serenity
- * Build: 2026-09-06 17:19:05
- * Fingerprint: aadec520d901c075
+ * Build: 2026-10-01 20:34:46
+ * Fingerprint: 9ac9d5b43683cf67
  * Copyright (c) 2026 Serenity. All rights reserved.
  */
 
@@ -50,7 +50,7 @@ async function fetchCommentData() {
         
         const avatar = window.SerenityCommentAvatar
           ? await window.SerenityCommentAvatar.resolve(item)
-          : (item.owner?.avatar || '');
+          : '';
         
         if (text) {
           COMMENT_DATA.push({ author, text, avatar });
@@ -134,15 +134,27 @@ var DanmakuSystem = class DanmakuSystem {
     
     const danmaku = document.createElement('div');
     danmaku.className = 'danmaku-item';
-    
-    const avatarHTML = avatar ? 
-      `<img src="${avatar}" class="danmaku-avatar" alt="${this.escapeHtml(author)}" onerror="this.style.display='none'" />` : '';
-    
-    danmaku.innerHTML = `
-      ${avatarHTML}
-      <span class="danmaku-author">${this.escapeHtml(author)}:</span>
-      <span class="danmaku-text">${this.escapeHtml(text)}</span>
-    `;
+
+    if (avatar) {
+      const avatarEl = document.createElement('img');
+      avatarEl.src = avatar;
+      avatarEl.className = 'danmaku-avatar';
+      avatarEl.alt = author;
+      avatarEl.addEventListener('error', function () {
+        avatarEl.style.display = 'none';
+      }, { once: true });
+      danmaku.appendChild(avatarEl);
+    }
+
+    const authorEl = document.createElement('span');
+    authorEl.className = 'danmaku-author';
+    authorEl.textContent = `${author}:`;
+    danmaku.appendChild(authorEl);
+
+    const textEl = document.createElement('span');
+    textEl.className = 'danmaku-text';
+    textEl.textContent = text;
+    danmaku.appendChild(textEl);
     
     const track = Math.floor(Math.random() * this.tracks);
     const top = track * this.trackHeight + 20;
@@ -166,10 +178,6 @@ var DanmakuSystem = class DanmakuSystem {
     });
   }
   
-  escapeHtml(text) {
-    // 复用 main.js 全局 escapeHtml
-    return (typeof window.escapeHtml === 'function') ? window.escapeHtml(text) : text;
-  }
 };
 
 function initDanmakuSystem() {

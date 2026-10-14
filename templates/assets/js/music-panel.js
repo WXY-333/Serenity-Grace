@@ -1,8 +1,8 @@
 /**
  * Theme: theme-Serenity
  * Author: Serenity
- * Build: 2026-09-06 17:19:05
- * Fingerprint: aadec520d901c075
+ * Build: 2026-10-14 23:50:57
+ * Fingerprint: 6a6b842778fedbf0
  * Copyright (c) 2026 Serenity. All rights reserved.
  */
 
@@ -46,7 +46,12 @@
   resizeObs.observe(el);
 
   function getAccentColor() {
-    return getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim() || '#c084fc';
+    var configured = getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim();
+    if (configured) return configured;
+    var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    return isLight
+      ? (window.__ACCENT_LIGHT || '#7DCDE8')
+      : (window.__ACCENT_DARK || '#E87D98');
   }
 
   function applyThemeColor(inst) {
@@ -154,9 +159,16 @@
     ap.list.audios.forEach(function(song, i) {
       var li = document.createElement('li');
       if (i === ap.list.index) li.classList.add('mp-list-active');
-      li.innerHTML = '<span class="mp-list-idx">' + (i + 1) + '</span>' +
-        '<span class="mp-list-name">' + (song.name || 'Unknown') + '</span>' +
-        '<span class="mp-list-artist">' + (song.artist || '') + '</span>';
+      var indexEl = document.createElement('span');
+      indexEl.className = 'mp-list-idx';
+      indexEl.textContent = String(i + 1);
+      var nameEl = document.createElement('span');
+      nameEl.className = 'mp-list-name';
+      nameEl.textContent = song.name || 'Unknown';
+      var artistEl = document.createElement('span');
+      artistEl.className = 'mp-list-artist';
+      artistEl.textContent = song.artist || '';
+      li.append(indexEl, nameEl, artistEl);
       li.addEventListener('click', function() {
         ap.list.switch(i);
         ap.play();

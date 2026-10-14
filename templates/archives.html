@@ -2,8 +2,8 @@
 <!--
   Theme: theme-Serenity
   Author: Serenity
-  Build: 2026-09-06 17:19:05
-  Fingerprint: aadec520d901c075
+  Build: 2026-10-14 23:50:57
+  Fingerprint: 6a6b842778fedbf0
   Copyright (c) 2026 Serenity. All rights reserved.
 -->
 
@@ -42,8 +42,7 @@
     <header class="page-header" data-aos="fade-up">
       <h1 class="page-title" th:text="${(theme.config.watermark?.archives?.enabled == true ? theme.config.watermark.archives.title : null) ?: '归档'}">归档</h1>
       <p class="page-desc" th:text="${(theme.config.watermark?.archives?.enabled == true ? theme.config.watermark.archives.subtitle : null) ?: '时光荏苒，文字留痕'}">时光荏苒，文字留痕</p>
-      <p class="page-desc" th:if="${archives.total}">共 <span th:text="${archives.total}">42</span> 篇文章</p>
-      <p class="page-desc" th:unless="${archives.total}">共 42 篇文章</p>
+      <p class="page-desc">共 <span th:text="${archives.total}"></span> 篇文章</p>
     </header>
     
     <div class="archive-layout">
@@ -136,7 +135,69 @@
       </div>
 
       <aside class="archive-sidebar">
-        <div class="sidebar-widget" th:if="${theme.config.sidebar == null || theme.config.sidebar.fortuneConfig == null || theme.config.sidebar.fortuneConfig.showFortune == null || theme.config.sidebar.fortuneConfig.showFortune}">
+        <div id="archiveSidebarOrder" hidden
+             th:if="${theme.config.sidebar != null && theme.config.sidebar.sidebarOrder != null}">
+          <span th:each="item : ${theme.config.sidebar.sidebarOrder}"
+                th:attr="data-sidebar-order=${item.component}"></span>
+        </div>
+
+        <section class="sidebar-widget archive-activity-widget"
+                 id="archiveActivityCalendar"
+                 data-sidebar-component="activityCalendar"
+                 th:if="${theme.config.sidebar == null || theme.config.sidebar.activityCalendarConfig == null || theme.config.sidebar.activityCalendarConfig.showActivityCalendar == null || theme.config.sidebar.activityCalendarConfig.showActivityCalendar}"
+                 th:attr="data-include-posts=${theme.config.sidebar == null || theme.config.sidebar.activityCalendarConfig == null || theme.config.sidebar.activityCalendarConfig.includePosts == null || theme.config.sidebar.activityCalendarConfig.includePosts},
+                          data-include-moments=${theme.config.sidebar == null || theme.config.sidebar.activityCalendarConfig == null || theme.config.sidebar.activityCalendarConfig.includeMoments == null || theme.config.sidebar.activityCalendarConfig.includeMoments},
+                          data-include-photos=${theme.config.sidebar == null || theme.config.sidebar.activityCalendarConfig == null || theme.config.sidebar.activityCalendarConfig.includePhotos == null || theme.config.sidebar.activityCalendarConfig.includePhotos},
+                          data-moments-available=${momentFinder != null},
+                          data-photos-available=${photoFinder != null}">
+          <div class="widget-header">
+            <svg class="widget-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span class="widget-divider"></span>
+            <span class="widget-title">活动日历</span>
+          </div>
+
+          <div class="activity-calendar-toolbar">
+            <button type="button" class="activity-calendar-nav" data-calendar-action="previous" title="上个月" aria-label="上个月">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <button type="button" class="activity-calendar-month" data-calendar-action="today" title="回到今天"></button>
+            <button type="button" class="activity-calendar-nav" data-calendar-action="next" title="下个月" aria-label="下个月">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </div>
+
+          <div class="activity-calendar-weekdays" aria-hidden="true">
+            <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+          </div>
+          <div class="activity-calendar-days" role="grid" aria-label="月历"></div>
+
+          <div class="activity-calendar-month-labels" aria-hidden="true"></div>
+          <div class="activity-calendar-heatmap" role="grid" aria-label="年度活动热力图"></div>
+          <div class="activity-calendar-tooltip" role="tooltip" hidden></div>
+
+          <div class="archive-activity-seed" hidden aria-hidden="true">
+            <th:block th:if="${momentFinder != null && (theme.config.sidebar == null || theme.config.sidebar.activityCalendarConfig == null || theme.config.sidebar.activityCalendarConfig.includeMoments == null || theme.config.sidebar.activityCalendarConfig.includeMoments)}"
+                      th:with="calendarMoments=${momentFinder.list(1, 9999)}">
+              <time th:each="moment : ${calendarMoments.items}"
+                    th:if="${moment.spec.releaseTime != null}"
+                    data-activity-type="moment"
+                    th:attr="data-activity-date=${#temporals.format(moment.spec.releaseTime, 'yyyy-MM-dd')}"></time>
+            </th:block>
+            <th:block th:if="${photoFinder != null && (theme.config.sidebar == null || theme.config.sidebar.activityCalendarConfig == null || theme.config.sidebar.activityCalendarConfig.includePhotos == null || theme.config.sidebar.activityCalendarConfig.includePhotos)}"
+                      th:with="calendarPhotoGroups=${photoFinder.groupBy()}">
+              <th:block th:each="group : ${calendarPhotoGroups}">
+                <time th:each="photo : ${group.photos}"
+                      th:if="${photo.metadata.creationTimestamp != null}"
+                      data-activity-type="photo"
+                      th:attr="data-activity-date=${#temporals.format(photo.metadata.creationTimestamp, 'yyyy-MM-dd')}"></time>
+              </th:block>
+            </th:block>
+          </div>
+        </section>
+
+        <div class="sidebar-widget" data-sidebar-component="fortune" th:if="${theme.config.sidebar == null || theme.config.sidebar.fortuneConfig == null || theme.config.sidebar.fortuneConfig.showFortune == null || theme.config.sidebar.fortuneConfig.showFortune}">
           <div class="widget-header">
             <svg class="widget-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             <span class="widget-divider"></span>
@@ -148,7 +209,7 @@
           </div>
         </div>
 
-        <div class="sidebar-widget" th:if="${theme.config.sidebar == null || theme.config.sidebar.hotPostsConfig == null || theme.config.sidebar.hotPostsConfig.showHotPosts == null || theme.config.sidebar.hotPostsConfig.showHotPosts}" th:with="hotPostsCount = ${theme.config.sidebar != null && theme.config.sidebar.hotPostsConfig != null && theme.config.sidebar.hotPostsConfig.hotPostsCount != null ? theme.config.sidebar.hotPostsConfig.hotPostsCount : 5}">
+        <div class="sidebar-widget" data-sidebar-component="hotPosts" th:if="${theme.config.sidebar == null || theme.config.sidebar.hotPostsConfig == null || theme.config.sidebar.hotPostsConfig.showHotPosts == null || theme.config.sidebar.hotPostsConfig.showHotPosts}" th:with="hotPostsCount = ${theme.config.sidebar != null && theme.config.sidebar.hotPostsConfig != null && theme.config.sidebar.hotPostsConfig.hotPostsCount != null ? theme.config.sidebar.hotPostsConfig.hotPostsCount : 5}">
           <div class="widget-header">
             <svg class="widget-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             <span class="widget-divider"></span>
@@ -166,7 +227,7 @@
           </ul>
         </div>
 
-        <div class="sidebar-widget" th:if="${theme.config.sidebar == null || theme.config.sidebar.recentCommentsConfig == null || theme.config.sidebar.recentCommentsConfig.showRecentComments == null || theme.config.sidebar.recentCommentsConfig.showRecentComments}" th:attr="data-comment-count=${theme.config.sidebar != null && theme.config.sidebar.recentCommentsConfig != null && theme.config.sidebar.recentCommentsConfig.recentCommentsCount != null ? theme.config.sidebar.recentCommentsConfig.recentCommentsCount : 3}">
+        <div class="sidebar-widget" data-sidebar-component="recentComments" th:if="${theme.config.sidebar == null || theme.config.sidebar.recentCommentsConfig == null || theme.config.sidebar.recentCommentsConfig.showRecentComments == null || theme.config.sidebar.recentCommentsConfig.showRecentComments}" th:attr="data-comment-count=${theme.config.sidebar != null && theme.config.sidebar.recentCommentsConfig != null && theme.config.sidebar.recentCommentsConfig.recentCommentsCount != null ? theme.config.sidebar.recentCommentsConfig.recentCommentsCount : 3}">
           <div class="widget-header">
             <svg class="widget-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             <span class="widget-divider"></span>
@@ -177,7 +238,7 @@
           </div>
         </div>
 
-        <div class="sidebar-widget" th:if="${theme.config.sidebar == null || theme.config.sidebar.tagCloudConfig == null || theme.config.sidebar.tagCloudConfig.showTagCloud == null || theme.config.sidebar.tagCloudConfig.showTagCloud}">
+        <div class="sidebar-widget" data-sidebar-component="tagCloud" th:if="${theme.config.sidebar == null || theme.config.sidebar.tagCloudConfig == null || theme.config.sidebar.tagCloudConfig.showTagCloud == null || theme.config.sidebar.tagCloudConfig.showTagCloud}">
           <div class="widget-header">
             <svg class="widget-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
             <span class="widget-divider"></span>

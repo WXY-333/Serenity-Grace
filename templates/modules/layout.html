@@ -608,7 +608,7 @@
       }
     })();
   </script>
-  <script th:src="@{/assets/js/cursor-init.js}" defer></script>
+  <script th:if="${theme.config.basic == null or theme.config.basic.cursorConfig == null or theme.config.basic.cursorConfig.enabled == null or theme.config.basic.cursorConfig.enabled}" th:src="@{/assets/js/cursor-init.js}" defer></script>
   <halo:footer />
 </body>
 </html>

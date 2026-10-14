@@ -2,8 +2,8 @@
 <!--
   Theme: theme-Serenity
   Author: Serenity
-  Build: 2026-09-06 17:19:05
-  Fingerprint: aadec520d901c075
+  Build: 2026-10-14 23:50:57
+  Fingerprint: 6a6b842778fedbf0
   Copyright (c) 2026 Serenity. All rights reserved.
 -->
 
@@ -93,7 +93,6 @@
   <script th:inline="javascript">
     var GITHUB_PROJECTS_RAW = /*[[${theme.config.projects?.githubRepos}]]*/ [];
     var CUSTOM_PROJECTS_RAW = /*[[${theme.config.projects?.customProjects}]]*/ [];
-    var GITHUB_TOKEN = /*[[${theme.config.projects?.githubToken}]]*/ '';
     
     window.GITHUB_PROJECTS = Array.isArray(GITHUB_PROJECTS_RAW) 
       ? GITHUB_PROJECTS_RAW.map(item => {
@@ -111,8 +110,6 @@
           return item;
         }).filter(item => item && item.name && item.url)
       : [];
-    
-    window.GITHUB_TOKEN = GITHUB_TOKEN || '';
   </script>
 
   <!-- 版本详情弹窗 -->

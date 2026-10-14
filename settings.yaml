@@ -53,6 +53,18 @@ spec:
           value: '#E87D98'
           help: 暗色模式下的主题主色调
         - $formkit: group
+          name: cursorConfig
+          label: 鼠标指针
+          value:
+            enabled: true
+          children:
+            - $formkit: switch
+              id: cursor_enabled
+              name: enabled
+              label: 启用动态鼠标指针
+              value: true
+              help: 关闭后使用浏览器默认鼠标指针
+        - $formkit: group
           name: typographyConfig
           label: 全站文字样式
           value:
@@ -375,19 +387,19 @@ spec:
               name: nameColor
               label: 显示名称颜色
               value: ""
-              placeholder: "FF6B6B 鎴?linear-gradient(135deg, FF6B6B, FB966E)"
+              placeholder: "FF6B6B 或 linear-gradient(135deg, FF6B6B, FB966E)"
               help: "自定义显示名称的颜色，支持纯色（如 #FF6B6B）或渐变（如 linear-gradient(135deg, #F596AA, #FB966E)）。留空则使用主题默认颜色。"
             - $formkit: text
               name: taglineColor
               label: 个性标语颜色
               value: ""
-              placeholder: "333 鎴?linear-gradient(135deg, 667eea, 764ba2)"
+              placeholder: "333 或 linear-gradient(135deg, 667eea, 764ba2)"
               help: "自定义个性标语的颜色，支持纯色或渐变。留空则使用主题默认颜色。"
             - $formkit: text
               name: bioColor
               label: 个人简介颜色
               value: ""
-              placeholder: "666 鎴?linear-gradient(135deg, f093fb, f5576c)"
+              placeholder: "666 或 linear-gradient(135deg, f093fb, f5576c)"
               help: "自定义个人简介的颜色，支持纯色或渐变。留空则使用主题默认颜色。"
             - $formkit: text
               name: avatarGlowColor
@@ -399,7 +411,7 @@ spec:
               name: weatherColor
               label: 天气文字颜色
               value: ""
-              placeholder: "#FF6B6B 鎴?linear-gradient(135deg, #FF6B6B, #FB966E)"
+              placeholder: "#FF6B6B 或 linear-gradient(135deg, #FF6B6B, #FB966E)"
               help: "自定义天气文字颜色。留空或纯色为镂空描边效果，渐变为渐变填充效果。"
 
     - group: welcome
@@ -1197,6 +1209,61 @@ spec:
     - group: sidebar
       label: 侧边栏设置
       formSchema:
+        - $formkit: repeater
+          name: sidebarOrder
+          label: 归档页侧栏组件顺序
+          help: 拖动调整归档页侧栏组件的显示顺序；显示或隐藏请使用下方对应组件开关
+          value:
+            - component: "activityCalendar"
+            - component: "fortune"
+            - component: "hotPosts"
+            - component: "recentComments"
+            - component: "tagCloud"
+          children:
+            - $formkit: select
+              name: component
+              label: 组件类型
+              value: "activityCalendar"
+              options:
+                - label: 活动日历
+                  value: activityCalendar
+                - label: 一言
+                  value: fortune
+                - label: 热门文章
+                  value: hotPosts
+                - label: 最新评论
+                  value: recentComments
+                - label: 标签云
+                  value: tagCloud
+              help: 每种组件建议只保留一项
+        - $formkit: group
+          name: activityCalendarConfig
+          label: 归档活动日历
+          children:
+            - $formkit: switch
+              id: sidebar_activity_calendar_enabled
+              name: showActivityCalendar
+              label: 显示活动日历
+              value: true
+              help: 在归档页侧栏显示月历和年度活动热力图
+            - $formkit: switch
+              name: includePosts
+              label: 统计文章
+              value: true
+              help: 按文章发布时间统计
+              if: $get(sidebar_activity_calendar_enabled).value
+            - $formkit: switch
+              name: includeMoments
+              label: 统计瞬间
+              value: true
+              help: 安装瞬间插件后，按瞬间发布时间统计
+              if: $get(sidebar_activity_calendar_enabled).value
+            - $formkit: switch
+              name: includePhotos
+              label: 统计图片
+              value: true
+              help: 安装图库插件后，按图片创建时间统计
+              if: $get(sidebar_activity_calendar_enabled).value
         - $formkit: group
           name: fortuneConfig
           label: 一言设置
@@ -1803,11 +1870,6 @@ spec:
     - group: projects
       label: 项目展示
       formSchema:
-        - $formkit: text
-          name: githubToken
-          label: GitHub Token（可选）
-          placeholder: ghp_xxxxxxxxxxxx
-          help: 用于拉取私有仓库或提高 API 请求限制，前往 GitHub Settings > Developer settings > Personal access tokens 创建
         - $formkit: repeater
           name: githubRepos
           label: GitHub 项目列表

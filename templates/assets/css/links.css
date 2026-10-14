@@ -1,8 +1,8 @@
 /*
  * Theme: theme-Serenity
  * Author: Serenity
- * Build: 2026-09-06 17:19:05
- * Fingerprint: aadec520d901c075
+ * Build: 2026-10-14 23:50:57
+ * Fingerprint: 6a6b842778fedbf0
  * Copyright (c) 2026 Serenity. All rights reserved.
  */
 
@@ -746,8 +746,8 @@
   border-radius: 12px;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--color-accent) 88%, #6f57ff),
-    color-mix(in srgb, var(--color-accent-secondary) 84%, #4e87ff)
+    var(--color-accent),
+    var(--color-accent-secondary)
   );
   color: #fff;
   font-size: 0.88rem;

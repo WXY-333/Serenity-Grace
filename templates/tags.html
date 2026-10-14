@@ -2,8 +2,8 @@
 <!--
   Theme: theme-Serenity
   Author: Serenity
-  Build: 2026-09-06 17:19:05
-  Fingerprint: aadec520d901c075
+  Build: 2026-10-14 23:50:57
+  Fingerprint: 6a6b842778fedbf0
   Copyright (c) 2026 Serenity. All rights reserved.
 -->
 
@@ -40,8 +40,8 @@
     <header class="page-header" data-aos="fade-up">
       <h1 class="page-title" th:text="${(theme.config.watermark?.tags?.enabled == true ? theme.config.watermark.tags.title : null) ?: '标签'}">标签</h1>
       <p class="page-desc" th:text="${(theme.config.watermark?.tags?.enabled == true ? theme.config.watermark.tags.subtitle : null) ?: '探索文章的标签世界'}">探索文章的标签世界</p>
-      <p class="page-desc" th:if="${not #lists.isEmpty(tags)}">
-        共 <span th:text="${#lists.size(tags)}">0</span> 个标签
+      <p class="page-desc">
+        共 <span th:text="${#lists.size(tags)}"></span> 个标签
       </p>
     </header>
 

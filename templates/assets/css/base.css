@@ -1,8 +1,8 @@
 /*
  * Theme: theme-Serenity
  * Author: Serenity
- * Build: 2026-09-06 17:19:05
- * Fingerprint: aadec520d901c075
+ * Build: 2026-10-14 23:50:57
+ * Fingerprint: 6a6b842778fedbf0
  * Copyright (c) 2026 Serenity. All rights reserved.
  */
 
@@ -33,10 +33,10 @@
   --color-text-secondary: rgba(255, 255, 255, 0.6);
   --color-text-muted: rgba(255, 255, 255, 0.4);
   
-  /* 主题色 - 默认值，将被 Hue 动态调节覆盖 */
-  --color-accent: #c084fc;
-  --color-accent-secondary: #a78bfa;
-  --color-accent-rgb: 192, 132, 252;
+  /* 暗色主题默认值，用户配置加载后会被动态覆盖 */
+  --color-accent: #E87D98;
+  --color-accent-secondary: #E87D98;
+  --color-accent-rgb: 232, 125, 152;
   
   --color-border: rgba(255, 255, 255, 0.08);
   --color-border-hover: rgba(255, 255, 255, 0.15);
@@ -183,10 +183,10 @@ html:not(.theme-vt)::view-transition-new(root) {
   --color-text-secondary: rgba(0, 0, 0, 0.6);
   --color-text-muted: rgba(0, 0, 0, 0.4);
   
-  /* 亮色模式主题色 - 将被 Hue 动态调节覆盖 */
-  --color-accent: #8b5cf6;
-  --color-accent-secondary: #6366f1;
-  --color-accent-rgb: 139, 92, 246;
+  /* 亮色主题默认值，用户配置加载后会被动态覆盖 */
+  --color-accent: #7DCDE8;
+  --color-accent-secondary: #7DCDE8;
+  --color-accent-rgb: 125, 205, 232;
   
   --color-border: rgba(0, 0, 0, 0.08);
   --color-border-hover: rgba(0, 0, 0, 0.15);
@@ -1395,6 +1395,10 @@ a.footer-provider {
   cursor: pointer;
   transition: all var(--duration-fast);
   min-width: 180px;
+  appearance: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
 }
 
 [data-theme="light"] .search-box {
@@ -1879,11 +1883,11 @@ pre code,
 :root {
   color-scheme: dark;
   --halo-cw-primary-1-color: var(--color-accent);
-  --halo-cw-primary-2-color: rgba(var(--color-accent-rgb, 192, 132, 252), 0.6);
-  --halo-cw-primary-3-color: rgba(var(--color-accent-rgb, 192, 132, 252), 0.3);
+  --halo-cw-primary-2-color: rgba(var(--color-accent-rgb), 0.6);
+  --halo-cw-primary-3-color: rgba(var(--color-accent-rgb), 0.3);
   --halo-cw-text-1-color: #f5f5f5;
   --halo-cw-text-2-color: var(--color-accent);
-  --halo-cw-text-3-color: rgba(var(--color-accent-rgb, 192, 132, 252), 0.6);
+  --halo-cw-text-3-color: rgba(var(--color-accent-rgb), 0.6);
   --halo-cw-muted-1-color: rgba(255, 255, 255, 0.12);
   --halo-cw-muted-2-color: rgba(255, 255, 255, 0.06);
   --halo-cw-muted-3-color: rgba(255, 255, 255, 0.03);
@@ -1906,11 +1910,11 @@ html[data-theme='light'] body,
 .light {
   color-scheme: light;
   --halo-cw-primary-1-color: var(--color-accent);
-  --halo-cw-primary-2-color: rgba(var(--color-accent-rgb, 139, 92, 246), 0.6);
-  --halo-cw-primary-3-color: rgba(var(--color-accent-rgb, 139, 92, 246), 0.3);
+  --halo-cw-primary-2-color: rgba(var(--color-accent-rgb), 0.6);
+  --halo-cw-primary-3-color: rgba(var(--color-accent-rgb), 0.3);
   --halo-cw-text-1-color: #1a1a1a;
   --halo-cw-text-2-color: var(--color-accent);
-  --halo-cw-text-3-color: rgba(var(--color-accent-rgb, 139, 92, 246), 0.6);
+  --halo-cw-text-3-color: rgba(var(--color-accent-rgb), 0.6);
   --halo-cw-muted-1-color: rgba(0, 0, 0, 0.08);
   --halo-cw-muted-2-color: rgba(0, 0, 0, 0.04);
   --halo-cw-muted-3-color: rgba(0, 0, 0, 0.02);

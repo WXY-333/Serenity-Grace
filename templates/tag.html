@@ -2,8 +2,8 @@
 <!--
   Theme: theme-Serenity
   Author: Serenity
-  Build: 2026-09-06 17:19:05
-  Fingerprint: aadec520d901c075
+  Build: 2026-10-14 23:50:57
+  Fingerprint: 6a6b842778fedbf0
   Copyright (c) 2026 Serenity. All rights reserved.
 -->
 
@@ -59,8 +59,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;vertical-align:middle;margin-right:8px;color:var(--color-accent)"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
           <span th:text="${tag.spec.displayName}">JavaScript</span>
         </h1>
-        <p class="page-desc" th:if="${posts.total}">共 <span th:text="${posts.total}">15</span> 篇文章</p>
-        <p class="page-desc" th:unless="${posts.total}">共 15 篇文章</p>
+        <p class="page-desc">共 <span th:text="${posts.total}"></span> 篇文章</p>
       </header>
 
       <div class="archive-list">

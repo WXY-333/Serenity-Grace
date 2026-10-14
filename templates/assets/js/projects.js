@@ -1,8 +1,8 @@
 /**
  * Theme: theme-Serenity
  * Author: Serenity
- * Build: 2026-09-06 17:19:05
- * Fingerprint: aadec520d901c075
+ * Build: 2026-10-14 23:50:57
+ * Fingerprint: 6a6b842778fedbf0
  * Copyright (c) 2026 Serenity. All rights reserved.
  */
 
@@ -108,18 +108,9 @@ async function fetchWithTimeout(url, options = {}, timeout = FETCH_TIMEOUT) {
   }
 }
 
-function getAuthHeaders() {
-  const token = window.GITHUB_TOKEN;
-  if (token) return { 'Authorization': `token ${token}` };
-  return {};
-}
-
 async function fetchGitHubRepo(owner, repo) {
   try {
-    const response = await fetchWithTimeout(
-      `${GITHUB_API_BASE}/repos/${owner}/${repo}`,
-      { headers: getAuthHeaders() }
-    );
+    const response = await fetchWithTimeout(`${GITHUB_API_BASE}/repos/${owner}/${repo}`);
     if (!response.ok) throw new Error('Failed to fetch');
     return await response.json();
   } catch (error) {
@@ -129,10 +120,7 @@ async function fetchGitHubRepo(owner, repo) {
 
 async function fetchGitHubReleases(owner, repo) {
   try {
-    const response = await fetchWithTimeout(
-      `${GITHUB_API_BASE}/repos/${owner}/${repo}/releases?per_page=20`,
-      { headers: getAuthHeaders() }
-    );
+    const response = await fetchWithTimeout(`${GITHUB_API_BASE}/repos/${owner}/${repo}/releases?per_page=20`);
     if (!response.ok) throw new Error('Failed to fetch');
     return await response.json();
   } catch (error) {
@@ -293,6 +281,10 @@ function createReleaseItem(release, isLatest) {
   const date = new Date(release.published_at);
   const dateStr = date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'short', day: 'numeric' });
   const timeAgo = getTimeAgo(date);
+  const safeTagName = escapeForHtml(String(release.tag_name || ''));
+  const safeReleaseName = escapeForHtml(String(release.name || release.tag_name || '未命名版本'));
+  const releaseUrl = sanitizeHttpUrl(release.html_url, '');
+  const safeReleaseUrl = escapeForHtml(releaseUrl);
   
   item.innerHTML = `
     <div class="release-marker">
@@ -301,22 +293,22 @@ function createReleaseItem(release, isLatest) {
     </div>
     <div class="release-content">
       <div class="release-header">
-        <span class="release-tag">${release.tag_name}</span>
+        <span class="release-tag">${safeTagName}</span>
         ${isLatest ? '<span class="release-latest-badge">最新</span>' : ''}
         ${release.prerelease ? '<span class="release-prerelease-badge">预发布</span>' : ''}
       </div>
-      <h3 class="release-title">${release.name || release.tag_name}</h3>
+      <h3 class="release-title">${safeReleaseName}</h3>
       <div class="release-meta">
         <span class="release-date">${dateStr}</span>
         <span class="release-time-ago">${timeAgo}</span>
       </div>
       ${release.body ? `<div class="release-body">${formatReleaseBody(release.body)}</div>` : ''}
-      <div class="release-actions">
-        <a href="${release.html_url}" target="_blank" rel="noopener noreferrer" class="release-link">
+      ${releaseUrl ? `<div class="release-actions">
+        <a href="${safeReleaseUrl}" target="_blank" rel="noopener noreferrer" class="release-link">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           查看详情
         </a>
-      </div>
+      </div>` : ''}
     </div>
   `;
   return item;
@@ -326,6 +318,17 @@ function escapeForHtml(str) {
   var div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+function sanitizeHttpUrl(url, fallback) {
+  fallback = fallback || '';
+  if (typeof url !== 'string' || !url.trim()) return fallback;
+  try {
+    var parsed = new URL(url.trim(), window.location.origin);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.href : fallback;
+  } catch (e) {
+    return fallback;
+  }
 }
 
 function formatReleaseBody(body) {
@@ -363,7 +366,9 @@ function formatReleaseBody(body) {
     // 保护链接
     var links = [];
     str = str.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function(m, label, url) {
-      links.push('<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + escapeForHtml(label) + '</a>');
+      var safeUrl = sanitizeHttpUrl(url, '');
+      if (!safeUrl) return label;
+      links.push('<a href="' + escapeForHtml(safeUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeForHtml(label) + '</a>');
       return '\x01LINK' + (links.length - 1) + '\x01';
     });
 

@@ -92,6 +92,7 @@
                th:attr="data-aos-delay=${150 + groupStat.index * 50 + linkStat.index * 30},
                         data-link-name=${link.spec.displayName},
                         data-link-desc=${link.spec.description},
+                        data-link-cover=${link.spec.cover},
                         data-link-group=${groupName}">
               <div class="link-avatar-wrap">
                 <img th:if="${link.spec.logo}" 
@@ -124,6 +125,13 @@
             <span>没有找到匹配的友链</span>
           </div>
         </div>
+        <div class="link-cover-preview" data-link-cover-preview hidden
+             th:if="${theme.config.links != null && theme.config.links.linksConfig != null && theme.config.links.linksConfig.showCoverPreview != false}"
+             th:attr="data-loading-gif=${theme.config.links != null && theme.config.links.linksConfig != null ? theme.config.links.linksConfig.coverPreviewLoadingGif : ''}">
+          <div class="link-cover-preview-loading" data-cover-loading hidden><span></span><span></span><span></span></div>
+          <img class="link-cover-preview-image" data-cover-image alt="博客首页预览" hidden>
+          <div class="link-cover-preview-message" data-cover-message></div>
+        </div>
         <div th:if="${groups == null || #lists.isEmpty(groups)}" class="plugin-notice">
           <div class="plugin-notice-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -150,6 +158,7 @@
             <label>网站地址<input name="url" type="url" required></label>
             <label>网站名称<input name="displayName" required></label>
             <label>Logo 地址<input name="logo" type="url"></label>
+            <label>博客首页图片（可选）<input name="cover" type="url" placeholder="首页截图或封面图片地址"></label>
             <label>网站描述<textarea name="description" rows="3"></textarea></label>
             <label>联系邮箱<input name="email" type="email"></label>
             <label>反链地址<input name="backlink" type="url"></label>
@@ -206,6 +215,7 @@
             <label>网站地址<input name="url" type="url" required></label>
             <label>网站名称<input name="displayName" required></label>
             <label>Logo 地址<input name="logo" type="url"></label>
+            <label>博客首页图片（可选）<input name="cover" type="url" placeholder="首页截图或封面图片地址"></label>
             <label>联系邮箱<input name="email" type="email"></label>
             <label>反链地址<input name="backlink" type="url"></label>
             <label>订阅地址<input name="feedUrls" type="url" placeholder="RSS/Atom 地址"></label>
@@ -396,6 +406,8 @@
     ['url', 'displayName', 'logo', 'description', 'email', 'backlink'].forEach(function(name) {
       body[name] = String(data.get(name) || '').trim();
     });
+    var cover = String(data.get('cover') || '').trim();
+    if (cover) body.cover = cover;
     body.feedUrls = String(data.get('feedUrls') || '').split(/[\s,]+/).filter(Boolean);
     body.challengeId = form.dataset.challengeId;
     body.captchaCode = captcha.value.trim();

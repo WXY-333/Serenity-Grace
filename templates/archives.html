@@ -35,7 +35,8 @@
 </th:block>
 <th:block th:fragment="content">
   <!-- PJAX：页面脚本置于 content 内，随局部刷新重新执行 -->
-  <script th:src="@{/assets/js/comment-avatar.js}" defer></script>
+  <script th:src="@{/assets/js/comment-avatar.js}"
+          th:attr="data-comment-provider=${theme.config.sidebar?.recentCommentsConfig?.avatarComponent ?: 'auto'}" defer></script>
   <script th:src="@{/assets/js/archives.js}" defer></script>
   <script th:src="@{/assets/js/tag-sphere.js}" defer></script>
   <div class="container">
@@ -235,6 +236,19 @@
           </div>
           <div class="widget-comments" id="latestComments">
             <div class="comment-loading">加载中...</div>
+          </div>
+          <div id="archiveCommentData" hidden th:with="comments=${commentFinder.list(null, 1, 0)}">
+            <span th:each="comment : ${comments.items}"
+                  th:if="${comment.spec.approved == true and comment.spec.hidden != true and comment.metadata.deletionTimestamp == null}"
+                  th:attr="data-comment-name=${comment.metadata.name},
+                           data-created=${comment.spec.creationTime ?: comment.metadata.creationTimestamp},
+                           data-content=${comment.spec.content},
+                           data-author=${comment.owner?.displayName},
+                           data-avatar=${comment.owner?.avatar},
+                           data-owner-kind=${comment.owner?.kind},
+                           data-email-hash=${comment.spec.owner?.annotations != null ? comment.spec.owner.annotations['email-hash'] : ''},
+                           data-subject-kind=${comment.spec.subjectRef.kind},
+                           data-subject-name=${comment.spec.subjectRef.name}"></span>
           </div>
         </div>
 

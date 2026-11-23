@@ -42,65 +42,31 @@ function sortPinnedPosts() {
   archiveList.appendChild(fragment);
 }
 
-function getCommentTargetName(comment) {
-  if (!comment) return '';
-  var spec = comment.spec || {};
-  var ref = spec.subjectRef || spec.subject || spec.targetRef || spec.commentSubject || {};
-  return ref.name || spec.name || '';
-}
-
 async function loadLatestComments() {
   const container = document.getElementById('latestComments');
   if (!container) return;
 
-  const commentCount = parseInt(container.closest('.sidebar-widget').getAttribute('data-comment-count') || '3');
+  const commentCount = Math.max(1, parseInt(container.closest('.sidebar-widget').getAttribute('data-comment-count'), 10) || 3);
 
   try {
-    const allComments = [];
-    const postPermalinkMap = new Map();
-
-    const postsResponse = await fetch(`/apis/api.content.halo.run/v1alpha1/posts?page=1&size=20&sort=metadata.creationTimestamp,desc`);
-    let recentPosts = [];
-    if (postsResponse.ok) {
-      const postsData = await postsResponse.json();
-      recentPosts = postsData.items || [];
-      recentPosts.forEach(post => {
-        if (post && post.metadata && post.metadata.name) {
-          postPermalinkMap.set(post.metadata.name, post.status && post.status.permalink ? post.status.permalink : '/');
-        }
-      });
-    }
-
-    if (recentPosts.length > 0) {
-      const commentTasks = recentPosts.slice(0, 12).map(post => {
-        const params = new URLSearchParams({
-          group: 'content.halo.run',
-          kind: 'Post',
-          name: post.metadata.name,
-          page: '1',
-          size: '5',
-          version: 'v1alpha1',
-          withReplies: 'false'
-        });
-        return fetch(`/apis/api.halo.run/v1alpha1/comments?${params.toString()}`)
-          .then(res => res.ok ? res.json() : null)
-          .then(data => ({ post: post, data: data }))
-          .catch(() => null);
-      });
-
-      const results = await Promise.all(commentTasks);
-      results.forEach(result => {
-        if (!result || !result.data || !result.data.items || result.data.items.length === 0) return;
-        result.data.items.forEach(comment => {
-          comment._postPermalink = result.post && result.post.status && result.post.status.permalink ? result.post.status.permalink : '/';
-          allComments.push(comment);
-        });
-      });
-    }
-
+    const seed = document.getElementById('archiveCommentData');
+    if (!seed) throw new Error('Comment data unavailable');
+    const comments = Array.from(seed.querySelectorAll('[data-comment-name]'), item => ({
+      metadata: { name: item.dataset.commentName },
+      permalink: item.dataset.permalink || '',
+      spec: {
+        approved: true, hidden: false, creationTime: item.dataset.created,
+        content: item.dataset.content || '',
+        subjectRef: { kind: item.dataset.subjectKind, name: item.dataset.subjectName },
+        owner: { annotations: { 'email-hash': item.dataset.emailHash || '' } }
+      },
+      owner: { displayName: item.dataset.author, avatar: item.dataset.avatar, kind: item.dataset.ownerKind }
+    }));
+    const allComments = comments.filter(comment => comment.spec?.approved === true
+      && comment.spec?.hidden !== true && !comment.metadata?.deletionTimestamp);
     allComments.sort((a, b) => {
-      const timeA = new Date(a.metadata.creationTimestamp).getTime();
-      const timeB = new Date(b.metadata.creationTimestamp).getTime();
+      const timeA = new Date(a.spec?.creationTime || a.metadata?.creationTimestamp || 0).getTime();
+      const timeB = new Date(b.spec?.creationTime || b.metadata?.creationTimestamp || 0).getTime();
       return timeB - timeA;
     });
 
@@ -110,30 +76,23 @@ async function loadLatestComments() {
       const commentItems = await Promise.all(latestComments.map(async comment => {
         const author = comment.owner?.displayName || '匿名';
         const contentHTML = comment.spec?.content || '';
-        const content = htmlToText(contentHTML);
+        const contentDoc = new DOMParser().parseFromString(contentHTML, 'text/html');
+        const content = contentDoc.body.textContent || '';
         const shortContent = content.length > 50 ? content.substring(0, 50) + '...' : content;
-        const postUrl = comment._postPermalink || '/';
+        const postUrl = comment.permalink || '/';
 
-        const avatar = window.SerenityCommentAvatar
-          ? await window.SerenityCommentAvatar.resolve(comment)
-          : '';
-        const safePostUrl = window.SerenityCommentAvatar && typeof window.SerenityCommentAvatar.sanitizeUrl === 'function'
-          ? window.SerenityCommentAvatar.sanitizeUrl(postUrl)
-          : '';
+        const targetUrl = new URL(postUrl, window.location.origin);
+        const safePostUrl = /^(https?:)$/.test(targetUrl.protocol) ? targetUrl.href : '';
 
         const itemEl = document.createElement('a');
         itemEl.href = `${safePostUrl || '/'}#comment-${encodeURIComponent(comment.metadata.name || '')}`;
         itemEl.className = 'comment-item';
+        itemEl.dataset.subjectKind = comment.spec.subjectRef.kind || '';
+        itemEl.dataset.subjectName = comment.spec.subjectRef.name || '';
+        itemEl.dataset.commentName = comment.metadata.name || '';
 
-        if (avatar) {
-          const avatarEl = document.createElement('img');
-          avatarEl.className = 'comment-avatar';
-          avatarEl.src = avatar;
-          avatarEl.alt = author;
-          avatarEl.addEventListener('error', function () {
-            avatarEl.style.display = 'none';
-          }, { once: true });
-          itemEl.appendChild(avatarEl);
+        if (typeof window.SerenityCommentAvatar?.createElement === 'function') {
+          itemEl.appendChild(window.SerenityCommentAvatar.createElement(comment));
         }
 
         const bodyEl = document.createElement('div');
@@ -149,6 +108,8 @@ async function loadLatestComments() {
         return itemEl;
       }));
       container.replaceChildren(...commentItems);
+      // Resolve links after rendering; failed or throttled API calls cannot break the page.
+      updateArchiveCommentLinks(container);
     } else {
       const emptyEl = document.createElement('div');
       emptyEl.className = 'comment-empty';
@@ -156,10 +117,36 @@ async function loadLatestComments() {
       container.replaceChildren(emptyEl);
     }
   } catch (error) {
+    console.warn('[Serenity] Failed to render recent comments:', error);
     const emptyEl = document.createElement('div');
     emptyEl.className = 'comment-empty';
-    emptyEl.textContent = '暂无评论';
+    emptyEl.textContent = '评论加载失败，请刷新重试';
     container.replaceChildren(emptyEl);
+  }
+}
+
+async function updateArchiveCommentLinks(container) {
+  const cache = new Map();
+  for (const item of container.querySelectorAll('.comment-item')) {
+    const resource = item.dataset.subjectKind === 'Post' ? 'posts'
+      : item.dataset.subjectKind === 'SinglePage' ? 'singlepages' : '';
+    if (!resource || !item.dataset.subjectName) continue;
+    const path = `/apis/api.content.halo.run/v1alpha1/${resource}/${encodeURIComponent(item.dataset.subjectName)}`;
+    try {
+      if (!cache.has(path)) {
+        const response = await fetch(path);
+        if (response.status === 429) break;
+        cache.set(path, response.ok ? (await response.json()).status?.permalink || '' : '');
+      }
+      const permalink = cache.get(path);
+      if (!permalink) continue;
+      const url = new URL(permalink, window.location.origin);
+      if (!/^(https?:)$/.test(url.protocol)) continue;
+      url.hash = `comment-${encodeURIComponent(item.dataset.commentName)}`;
+      item.href = url.href;
+    } catch (error) {
+      // Leave text and avatar intact when a comment subject is unavailable.
+    }
   }
 }
 

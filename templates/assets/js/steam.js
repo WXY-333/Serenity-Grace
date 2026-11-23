@@ -28,6 +28,37 @@
   var container = document.getElementById('steamProfileCard');
   if (!container) return;
 
+  function gameCoverUrls(appid, icon) {
+    var id = encodeURIComponent(appid);
+    var legacy = 'https://cdn.cloudflare.steamstatic.com/steam/apps/' + id + '/';
+    var current = 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/' + id + '/';
+    var urls = [legacy + 'library_600x900.jpg', current + 'library_600x900.jpg',
+      current + 'header.jpg', legacy + 'header.jpg'];
+    if (icon) {
+      urls.push('https://media.steampowered.com/steamcommunity/public/images/apps/' + id + '/' + encodeURIComponent(icon) + '.jpg');
+    }
+    return urls;
+  }
+
+  // Capture image errors before inserting markup, including cached failures.
+  // Each candidate is tried once; a missing fallback must never retry itself.
+  container.addEventListener('error', function (event) {
+    var image = event.target;
+    if (!image.classList || !image.classList.contains('steam-game-card-img')) return;
+    if (image.dataset.coverFailed === 'true') return;
+    var urls = gameCoverUrls(image.dataset.appid, image.dataset.icon);
+    var next = Number(image.dataset.coverIndex || 0) + 1;
+    if (next < urls.length) {
+      image.dataset.coverIndex = String(next);
+      image.src = urls[next];
+    } else {
+      image.dataset.coverFailed = 'true';
+      image.hidden = true;
+      image.removeAttribute('src');
+      image.parentElement.classList.add('steam-game-card--no-cover');
+    }
+  }, true);
+
   // 读取主题显示控制设置
   var card = container.closest('.about-card') || container.parentElement;
   var cfg = {
@@ -261,15 +292,14 @@
       html += '<div class="steam-collapse-panel" id="steamCollapsePanel"><div class="steam-game-grid">';
       panelGames.forEach(function (g) {
         var appid = g.appid;
-        var imgUrl = 'https://cdn.cloudflare.steamstatic.com/steam/apps/' + appid + '/library_600x900.jpg';
-        var headerImg = 'https://cdn.cloudflare.steamstatic.com/steam/apps/' + appid + '/header.jpg';
+        var imgUrl = gameCoverUrls(appid, g.img_icon_url)[0];
         var gameName = g.name || ('Game ' + appid);
         var hours2w = g.playtime_2weeks ? (g.playtime_2weeks / 60).toFixed(1) : '';
         var hoursTotal = g.playtime_forever ? (g.playtime_forever / 60).toFixed(1) : '0';
         var timeText = hours2w ? '两周 ' + hours2w + 'h / 总计 ' + hoursTotal + 'h' : '总计 ' + hoursTotal + 'h';
         html += '<div class="steam-game-card">' +
           '<img class="steam-game-card-img" src="' + imgUrl + '" alt="' + escHtml(gameName) + '" loading="lazy" ' +
-          'onerror="this.src=\'' + headerImg + '\'" />' +
+          'data-appid="' + escHtml(String(appid)) + '" data-icon="' + escHtml(g.img_icon_url || '') + '" />' +
           '<div class="steam-game-card-overlay">' +
           '<div class="steam-game-card-name">' + escHtml(gameName) + '</div>' +
           '<div class="steam-game-card-time">' + timeText + '</div>' +

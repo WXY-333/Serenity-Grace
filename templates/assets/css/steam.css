@@ -437,6 +437,12 @@
 .steam-game-card:hover .steam-game-card-overlay {
   opacity: 1;
 }
+.steam-game-card--no-cover .steam-game-card-overlay {
+  opacity: 1;
+}
+.steam-game-card--no-cover .steam-game-card-name {
+  white-space: normal;
+}
 .steam-game-card-name {
   font-size: 0.8rem;
   font-weight: 600;

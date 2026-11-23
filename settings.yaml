@@ -1323,6 +1323,18 @@ spec:
           name: recentCommentsConfig
           label: 最新评论
           children:
+            - $formkit: select
+              name: avatarComponent
+              label: 评论头像来源
+              value: auto
+              help: 自动识别优先读取 Comment Next 的头像设置；使用对应组件中配置的头像，图片不可用时显示昵称首字。
+              options:
+                - label: 自动识别
+                  value: auto
+                - label: Comment Next
+                  value: next
+                - label: 官方评论组件
+                  value: official
             - $formkit: switch
               id: sidebar_comments_enabled
               name: showRecentComments

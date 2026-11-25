@@ -221,7 +221,7 @@ function applyArchiveSidebarOrder() {
   });
 
   widgets.forEach(function (widget, component) {
-    if (!usedComponents.has(component)) orderedWidgets.push(widget);
+    if (!usedComponents.has(component)) widget.remove();
   });
 
   orderSource.remove();

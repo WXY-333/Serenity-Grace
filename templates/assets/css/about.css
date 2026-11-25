@@ -123,6 +123,42 @@
   color: var(--color-text-muted);
 }
 
+.about-contact-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+}
+.about-contact-card > .about-section-title { flex-basis: 100%; margin-bottom: 0; }
+.about-contact-card > .about-contact { flex: 1 1 360px; min-width: 0; }
+.contact-signature {
+  flex: 0 1 280px;
+  width: min(280px, 100%);
+  margin: 0 0 0 auto;
+  color: var(--color-accent);
+  transform: rotate(-4deg);
+}
+.contact-signature svg { display: block; width: 100%; height: auto; max-height: 82px; overflow: visible; }
+.contact-signature-text {
+  font-family: 'Segoe Script', 'Snell Roundhand', 'Brush Script MT', 'URW Chancery L', cursive;
+  font-size: 56px;
+  font-weight: 400;
+  fill: currentColor;
+}
+.contact-signature-flourish { fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; }
+.contact-signature.is-written .contact-signature-text { animation: contact-signature-write 2.6s ease-in-out both; }
+.contact-signature.is-written .contact-signature-flourish { animation: contact-signature-underline .65s 2.2s ease-out both; }
+@keyframes contact-signature-write {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+@keyframes contact-signature-underline { from { stroke-dasharray: 1; stroke-dashoffset: 1; } to { stroke-dasharray: 1; stroke-dashoffset: 0; } }
+@media (max-width: 600px) { .contact-signature { flex-basis: 220px; width: min(220px, 100%); } }
+@media (prefers-reduced-motion: reduce) {
+  .contact-signature.is-written .contact-signature-text,
+  .contact-signature.is-written .contact-signature-flourish { animation: none; }
+}
+
 .glass-card {
   position: relative;
   padding: var(--space-6);

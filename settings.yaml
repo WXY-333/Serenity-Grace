@@ -1224,8 +1224,9 @@ spec:
         - $formkit: repeater
           name: sidebarOrder
           label: 归档页侧栏组件顺序
-          help: 拖动调整归档页侧栏组件的显示顺序；显示或隐藏请使用下方对应组件开关
+          help: 列表决定归档页侧栏显示的组件及顺序；删除即不显示。对应组件的开关关闭时也不显示。
           value:
+            - component: "profileCard"
             - component: "activityCalendar"
             - component: "fortune"
             - component: "hotPosts"
@@ -1237,6 +1238,8 @@ spec:
               label: 组件类型
               value: "activityCalendar"
               options:
+                - label: 个人信息卡片
+                  value: profileCard
                 - label: 活动日历
                   value: activityCalendar
                 - label: 一言
@@ -1248,6 +1251,15 @@ spec:
                 - label: 标签云
                   value: tagCloud
               help: 每种组件建议只保留一项
+        - $formkit: group
+          name: profileCardConfig
+          label: 个人信息卡片
+          children:
+            - $formkit: switch
+              name: showProfileCard
+              label: 显示个人信息卡片
+              value: true
+              help: 使用 Halo Logo、首页昵称和签名；展开社交链接中前五个有效联系方式。可在上方顺序列表添加并拖动排序。
         - $formkit: group
           name: activityCalendarConfig
           label: 归档活动日历
@@ -1543,6 +1555,138 @@ spec:
               help: 显示在关于页面的“建站历程”部分
               if: $get(about_history_enabled).value
         - $formkit: group
+          name: effectsCards
+          label: 动效双卡片
+          children:
+            - $formkit: switch
+              id: about_effects_enabled
+              name: enabled
+              label: 显示动效双卡片
+              value: false
+            - $formkit: attachment
+              name: images
+              label: 左侧图片列表
+              multiple: true
+              accepts:
+                - image/*
+              value: []
+              if: $get(about_effects_enabled).value
+              help: 从附件库多选图片，选图时可按附件分组筛选；前台每点击一次按顺序换一张。
+            - $formkit: select
+              name: transition
+              label: 图片切换效果
+              value: bars
+              if: $get(about_effects_enabled).value
+              options:
+                - label: "bars (2D)"
+                  value: bars
+                - label: "zip (2D)"
+                  value: zip
+                - label: "blinds (2D)"
+                  value: blinds
+                - label: "blocks (2D)"
+                  value: blocks
+                - label: "concentric (2D)"
+                  value: concentric
+                - label: "warp (2D)"
+                  value: warp
+                - label: "slide (2D)"
+                  value: slide
+                - label: "swipe (2D)"
+                  value: swipe
+                - label: "dissolve (2D)"
+                  value: dissolve
+                - label: "blocks2 (2D)"
+                  value: blocks2
+                - label: "bars3d (3D)"
+                  value: bars3d
+                - label: "cube (3D)"
+                  value: cube
+                - label: "tiles3d (3D)"
+                  value: tiles3d
+                - label: "blinds3d (3D)"
+                  value: blinds3d
+                - label: "turn (3D)"
+                  value: turn
+            - $el: div
+              if: $get(about_effects_enabled).value
+              attrs:
+                style: "display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px;"
+              children:
+                - $el: div
+                  attrs:
+                    style: "min-width: 0; display: flow-root;"
+                  children:
+                    - $formkit: attachment
+                      name: background
+                      label: 右侧背景图（亮色）
+                      sectionsSchema:
+                        label:
+                          attrs:
+                            style: "margin-bottom: 6px;"
+                      accepts:
+                        - image/*
+                      value: ""
+                - $el: div
+                  attrs:
+                    style: "min-width: 0; display: flow-root;"
+                  children:
+                    - $formkit: attachment
+                      name: character
+                      label: 右侧人物图（亮色）
+                      sectionsSchema:
+                        label:
+                          attrs:
+                            style: "margin-bottom: 6px;"
+                      accepts:
+                        - image/*
+                      value: ""
+            - $el: div
+              if: $get(about_effects_enabled).value
+              attrs:
+                style: "display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; padding-top: 20px;"
+              children:
+                - $el: div
+                  attrs:
+                    style: "min-width: 0; display: flow-root;"
+                  children:
+                    - $formkit: attachment
+                      name: backgroundDark
+                      label: 右侧背景图（暗色）
+                      sectionsSchema:
+                        label:
+                          attrs:
+                            style: "margin-bottom: 6px;"
+                      help: 未选择时使用亮色背景图。
+                      accepts:
+                        - image/*
+                      value: ""
+                - $el: div
+                  attrs:
+                    style: "min-width: 0; display: flow-root;"
+                  children:
+                    - $formkit: attachment
+                      name: characterDark
+                      label: 右侧人物图（暗色）
+                      sectionsSchema:
+                        label:
+                          attrs:
+                            style: "margin-bottom: 6px;"
+                      help: 未选择时使用亮色人物图。
+                      accepts:
+                        - image/*
+                      value: ""
+            - $formkit: text
+              name: title
+              label: 人物卡片标题
+              value: NO DAMAGE TO ELIMINATE 200 GOBLINE
+              if: $get(about_effects_enabled).value
+            - $formkit: text
+              name: subtitle
+              label: 人物卡片副标题
+              value: PlayStation 4 -Xbox
+              if: $get(about_effects_enabled).value
+        - $formkit: group
           name: contactConfig
           label: 联系组件
           value:
@@ -1554,6 +1698,12 @@ spec:
               label: 显示联系组件
               value: true
               help: 控制关于页面底部“联系我”组件显示或隐藏
+            - $formkit: text
+              name: signature
+              label: 手写签名
+              value: Wang xin yang
+              if: $get(about_contact_enabled).value
+              help: 显示在联系我卡片右下角，进入视野时播放书写动画；留空不显示。
         - $formkit: group
           name: steamConfig
           label: Steam 游戏

@@ -1,0 +1,46 @@
+.about-effects-row { position: relative; z-index: 2; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-5); margin-bottom: var(--space-5); overflow: visible; }
+.about-gallery-panel, .about-character-panel { min-width: 0; display: flex; align-items: center; justify-content: center; overflow: visible; }
+.about-effects-row { align-items: center; }
+.about-effect-gallery { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 20px; cursor: pointer; background: var(--color-bg-mute); }
+.about-effect-stage { position: absolute; width: 1024px; height: 576px; transform-origin: top left; pointer-events: none; }
+.about-effect-status { position: absolute; inset: 0; display: grid; place-items: center; color: var(--color-text-muted); font-size: 13px; pointer-events: none; }
+.about-effect-status[hidden] { display: none; }
+.about-effect-gallery:focus-visible, .about-character-card:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 4px; }
+
+.about-character-card { position: relative; isolation: isolate; width: 100%; aspect-ratio: 16 / 9; overflow: visible; }
+.about-character-background { width: 100%; height: 100%; border-radius: 20px; overflow: hidden; box-shadow: 0 0 30px 20px rgba(255,255,255,.05); transform-origin: bottom; transition: 2s; }
+.about-character-background img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+.about-character-figure { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; transform-origin: bottom; transition: 2s; pointer-events: none; }
+.about-character-figure img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+.about-character-card img.about-character-dark { display: none; }
+[data-theme="dark"] .about-character-card img.about-character-light { display: none; }
+[data-theme="dark"] .about-character-card img.about-character-dark { display: block; }
+.about-character-content { position: absolute; z-index: 2; right: 12px; bottom: 12px; max-width: 60%; padding: 10px; border-radius: 12px; color: var(--color-text); background: var(--color-bg); opacity: 0; transform: translateY(12px); transition: 2s; overflow-wrap: anywhere; pointer-events: none; }
+.about-character-content h3 { color: var(--color-accent); font-size: 20px; font-weight: 200; margin: 0; }
+.about-character-content p { color: var(--color-accent); padding-top: 10px; font-size: 14px; font-weight: 200; margin: 0; }
+.about-character-card:hover .about-character-background, .about-character-card:focus-visible .about-character-background { transform: perspective(1000px) rotateX(30deg) skewX(-20deg); }
+.about-character-card:hover .about-character-figure, .about-character-card:focus-visible .about-character-figure { transform: scale(1.2); }
+.about-character-card:hover .about-character-content, .about-character-card:focus-visible .about-character-content { opacity: 1; transform: translateY(0); }
+@media (max-width: 900px) { .about-effects-row { grid-template-columns: 1fr; } }
+@media (max-width: 480px) { .about-character-content h3 { font-size: 16px; } }
+@media (hover: none) {
+  .about-character-card { cursor: pointer; }
+  .about-character-card:hover .about-character-background,
+  .about-character-card:focus-visible .about-character-background,
+  .about-character-card:hover .about-character-figure,
+  .about-character-card:focus-visible .about-character-figure { transform: none; }
+  .about-character-card:hover .about-character-content,
+  .about-character-card:focus-visible .about-character-content { opacity: 0; transform: translateY(12px); }
+  .about-character-card.is-expanded .about-character-background { transform: perspective(1000px) rotateX(30deg); }
+  .about-character-card.is-expanded .about-character-figure { transform: scale(1.08); }
+  .about-character-card.is-expanded .about-character-content { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 480px) {
+  .about-character-content { right: 8px; bottom: 8px; max-width: 65%; padding: 8px; }
+  .about-character-content h3 { font-size: 14px; line-height: 1.4; }
+  .about-character-content p { padding-top: 4px; font-size: 12px; line-height: 1.4; }
+}
+@media (prefers-reduced-motion: reduce) { .about-character-card * { transition: none; } }
+
+.about-effect-stage > img { width: 1024px; height: 576px; object-fit: cover; display: block; }
+.about-effect-stage .image1, .about-effect-stage .image2, .about-effect-stage .image1 div { background-size: 1024px 576px; }

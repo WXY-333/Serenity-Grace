@@ -517,6 +517,15 @@ spec:
               label: Iconify 图标
               placeholder: "mdi:github"
               help: "从 Iconify 图标库输入图标名称（如 mdi:github、ri:twitter-x-fill），可在 https://icon-sets.iconify.design 查找。优先级高于内置图标，留空则使用上方内置图标"
+            - $formkit: attachment
+              name: customImage
+              label: 自定义社交图标图片
+              accepts:
+                - image/*
+            - $formkit: textarea
+              name: customSvg
+              label: 自定义社交图标 SVG 代码
+              help: 粘贴完整 SVG 代码。显示优先级：SVG 代码 → 自定义图片 → Iconify 图标 → 内置图标；留空则按此顺序使用其他已配置图标。
         - $formkit: group
           name: rssConfig
           label: RSS 订阅
@@ -1430,15 +1439,70 @@ spec:
             - $formkit: switch
               id: about_site_enabled
               name: showAboutSite
+              key: serenity_about_site_showAboutSite
               label: 显示关于本站
               value: false
               help: 在关于页面显示“关于本站”部分
             - $formkit: textarea
               name: aboutSite
+              id: serenity_about_site_content
+              key: serenity_about_site_aboutSite
               label: 关于本站
               value: "嗨，欢迎来到我的小站。这里是我记录技术探索、分享生活感悟的地方。\n\n作为一名前端开发者，我热衷于探索新技术，追求简洁优雅的代码。工作之余，我喜欢折腾各种有趣的项目，也会在这里分享一些心得。"
               help: 显示在关于页面的“关于本站”部分
               if: $get(about_site_enabled).value
+            - $formkit: select
+              name: display
+              key: serenity_about_site_display
+              id: about_site_display
+              label: 右侧显示组件
+              value: stats
+              options:
+                - label: 本站统计
+                  value: stats
+                - label: 天气卡片
+                  value: weather
+                - label: 合并展示
+                  value: combined
+                - label: 隐藏
+                  value: hidden
+            - $el: p
+              if: $get(about_site_display).value == 'combined'
+              attrs:
+                style: "font-size: 13px; color: #64748b; margin: 8px 0 16px;"
+              children: 前端页面可按住鼠标左右拖动，切换本站统计与天气卡片；手机可左右滑动，并记住上次选择。
+            - $formkit: attachment
+              name: statsBackground
+              key: serenity_about_site_stats_background
+              if: $get(about_site_display).value == 'stats' || $get(about_site_display).value == 'combined'
+              label: 本站统计背景图
+              accepts:
+                - image/*
+              value: ""
+              help: 从附件库选择背景图，自适应填充；留空使用主题内置 about-weather.jpg。
+            - $formkit: text
+              name: location
+              key: serenity_about_site_location
+              if: $get(about_site_display).value == 'weather' || $get(about_site_display).value == 'combined'
+              label: 固定天气地点
+              value: 北京
+              help: 填写中文城市名称，例如 东莞、北京；也兼容城市拼音或心知天气城市 ID。不使用访客定位。
+            - $formkit: text
+              name: apiKey
+              key: serenity_about_site_apiKey
+              if: $get(about_site_display).value == 'weather' || $get(about_site_display).value == 'combined'
+              label: 心知天气 API Key
+              value: ""
+              help: 留空时沿用首页天气时钟的 API Key。免费版显示实况及三天预报。
+            - $formkit: attachment
+              name: background
+              key: serenity_about_site_background
+              if: $get(about_site_display).value == 'weather' || $get(about_site_display).value == 'combined'
+              label: 天气卡片背景图
+              accepts:
+                - image/*
+              value: ""
+              help: 留空使用主题内置的示范背景图。
         - $formkit: group
           name: skillsConfig
           label: 技能列表
@@ -1501,15 +1565,17 @@ spec:
                   min: 0
                   max: 100
                   step: 5
+                - $formkit: textarea
+                  name: customSvg
+                  label: 自定义图标 SVG 代码
+                  help: 粘贴完整 SVG 代码。优先级：SVG 代码 → 自定义图片 → Iconify 图标 → 内置图标；留空使用下一项。
                 - $formkit: attachment
                   name: customIcon
                   label: 自定义图标图片
-                  help: 从附件库选择图标图片（优先级最高），建议正方形 PNG/SVG，尺寸 64x64 以上
                 - $formkit: text
                   name: iconifyIcon
                   label: Iconify 图标
                   placeholder: "skill-icons:javascript"
-                  help: "从 Iconify 图标库输入图标名称（如 skill-icons:javascript、logos:vue），可在 https://icon-sets.iconify.design 查找。优先级高于内置图标"
                 - $formkit: select
                   name: icon
                   label: 内置图标（兜底）
@@ -1532,7 +1598,6 @@ spec:
                       value: html
                     - label: Python
                       value: python
-                  help: 当自定义图片和 Iconify 图标都为空时，使用此内置图标
                 - $formkit: text
                   name: iconColor
                   label: 图标背景色

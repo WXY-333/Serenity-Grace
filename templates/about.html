@@ -27,6 +27,7 @@
       th:replace="~{modules/layout :: html(title = ${singlePage.spec.title}, content = ~{::content}, head = ~{::head})}">
 <th:block th:fragment="head">
   <link rel="stylesheet" th:href="@{/assets/css/about.css}" />
+  <link rel="stylesheet" th:href="@{/assets/css/about-weather.css}" />
   <link th:if="${theme.config.about?.effectsCards?.enabled == true}" rel="stylesheet" th:href="@{/assets/css/about-effects.css}" />
   <link th:if="${theme.config.about != null && theme.config.about.steamConfig != null && theme.config.about.steamConfig.showSteam}" rel="stylesheet" th:href="@{/assets/css/steam.css}" />
 
@@ -52,6 +53,9 @@
 </th:block>
 <th:block th:fragment="content">
   <script th:src="@{/assets/js/about-signature.js}" defer></script>
+  <script th:src="@{/assets/js/about-weather.js}" defer></script>
+  <script th:src="@{/assets/js/about-switch.js}" defer></script>
+  <script type="module" th:src="@{/assets/js/about-stats.js}"></script>
   <script th:if="${theme.config.about?.effectsCards?.enabled == true}" th:src="@{/assets/js/about-effects.js}" th:attr="data-vendor-base=@{/assets/js/about-effects-vendor/}" defer></script>
   <!-- PJAX：页面脚本置于 content 内，随局部刷新重新执行 -->
   <script th:if="${theme.config.about != null && theme.config.about.foreverBlogConfig != null && theme.config.about.foreverBlogConfig.showForeverBlog}" th:src="@{/assets/js/about.js}" defer></script>
@@ -113,12 +117,14 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
         关于本站
       </h2>
-      <div class="about-content">
+      <div class="about-content" th:classappend="${theme.config.about?.aboutSiteConfig?.display == 'weather' ? 'has-weather' : ''}">
         <div class="about-text" style="white-space: pre-line;" th:text="${theme.config.about != null && theme.config.about.aboutSiteConfig != null ? theme.config.about.aboutSiteConfig.aboutSite : ''}">
           <p>嗨，欢迎来到我的小站。这里是我记录技术探索、分享生活感悟的地方。</p>
           <p>作为一名前端开发者，我热衷于探索新技术，追求简洁优雅的代码。工作之余，我喜欢折腾各种有趣的项目，也会在这里分享一些心得。</p>
         </div>
-        <div class="about-stats">
+        <div th:class="${theme.config.about?.aboutSiteConfig?.display == 'combined' ? 'about-switch' : 'about-single'}" th:remove="${theme.config.about?.aboutSiteConfig?.display == 'combined' ? 'none' : 'tag'}" tabindex="0" role="group" aria-label="本站统计与天气，左右拖动或按方向键切换">
+        <div class="about-stats" th:if="${theme.config.about?.aboutSiteConfig?.display == null || theme.config.about.aboutSiteConfig.display == 'stats' || theme.config.about?.aboutSiteConfig?.display == 'combined'}">
+          <div class="stats-bubbles" aria-hidden="true" th:attr="data-background=${!#strings.isEmpty(theme.config.about?.aboutSiteConfig?.statsBackground) ? theme.config.about.aboutSiteConfig.statsBackground : '/themes/theme-Serenity/assets/images/about-weather.jpg'}"></div>
           <div class="stat-item">
             <span class="stat-num" th:text="${postFinder.listAll().size()}">0</span>
             <span class="stat-label">篇文章</span>
@@ -133,6 +139,21 @@
             <span class="stat-num">365</span>
             <span class="stat-label">天运行</span>
           </div>
+        </div>
+        <section class="about-weather" aria-label="当地天气" th:if="${theme.config.about?.aboutSiteConfig?.display == 'weather' || theme.config.about?.aboutSiteConfig?.display == 'combined'}"
+                 th:with="weather=${theme.config.about.aboutSiteConfig}"
+                 th:attr="data-location=${weather.location ?: '北京'},data-key=${!#strings.isEmpty(weather.apiKey) ? weather.apiKey : theme.config.home?.weatherConfig?.seniverseKey}">
+          <div class="aw-shell"><div class="aw-scene">
+            <img class="aw-background" th:src="${!#strings.isEmpty(weather.background) ? weather.background : '/themes/theme-Serenity/assets/images/about-weather.jpg'}" alt="" />
+            <div class="aw-date"><strong data-aw="weekday"></strong><span data-aw="date"></span><span class="aw-location"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 1 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg><span data-aw="city">加载天气中</span></span></div>
+            <div class="aw-current"><span class="aw-icon" data-aw="icon" aria-hidden="true"></span><strong data-aw="temperature">--°</strong><span data-aw="description">正在获取天气</span></div>
+          </div>
+          <div class="aw-details">
+            <div class="aw-metrics" hidden></div>
+            <div class="aw-forecast" aria-label="三天天气预报"></div>
+            <p class="aw-status" role="status">正在获取天气</p>
+          </div></div>
+        </section>
         </div>
       </div>
     </div>
@@ -172,15 +193,15 @@
       <div class="skills-grid">
         <div class="skill-card" th:each="skill : ${theme.config.about != null && theme.config.about.skillsConfig != null ? theme.config.about.skillsConfig.skills : {}}">
           <!-- 自定义图标图片（优先级最高） -->
-          <div th:if="${skill.customIcon != null && !#strings.isEmpty(skill.customIcon)}" class="skill-icon skill-icon-custom" th:style="${skill.iconColor != null && !#strings.isEmpty(skill.iconColor) ? 'background:' + skill.iconColor : ''}">
-            <img th:src="${skill.customIcon}" th:alt="${skill.name}" />
+          <div th:if="${!#strings.isEmpty(skill.customSvg) || (skill.customIcon != null && !#strings.isEmpty(skill.customIcon))}" class="skill-icon skill-icon-custom" th:style="${skill.iconColor != null && !#strings.isEmpty(skill.iconColor) ? 'background:' + skill.iconColor : ''}">
+            <img th:src="${skill.customIcon}" th:attr="data-icon-svg=${skill.customSvg}" th:alt="${skill.name}" />
           </div>
           <!-- Iconify 图标（优先级第二） -->
-          <div th:if="${(skill.customIcon == null || #strings.isEmpty(skill.customIcon)) && skill.iconifyIcon != null && !#strings.isEmpty(skill.iconifyIcon)}" class="skill-icon skill-icon-iconify" th:style="${skill.iconColor != null && !#strings.isEmpty(skill.iconColor) ? 'background:' + skill.iconColor : ''}">
+          <div th:if="${(#strings.isEmpty(skill.customSvg) && (skill.customIcon == null || #strings.isEmpty(skill.customIcon))) && skill.iconifyIcon != null && !#strings.isEmpty(skill.iconifyIcon)}" class="skill-icon skill-icon-iconify" th:style="${skill.iconColor != null && !#strings.isEmpty(skill.iconColor) ? 'background:' + skill.iconColor : ''}">
             <span class="iconify" th:attr="data-icon=${skill.iconifyIcon}" data-width="24" data-height="24"></span>
           </div>
           <!-- 内置图标（兜底） -->
-          <div th:if="${(skill.customIcon == null || #strings.isEmpty(skill.customIcon)) && (skill.iconifyIcon == null || #strings.isEmpty(skill.iconifyIcon))}" class="skill-icon" th:classappend="${skill.icon != null ? 'skill-icon-' + skill.icon : ''}" th:style="${skill.iconColor != null && !#strings.isEmpty(skill.iconColor) ? 'background:' + skill.iconColor : ''}">
+          <div th:if="${(#strings.isEmpty(skill.customSvg) && (skill.customIcon == null || #strings.isEmpty(skill.customIcon))) && (skill.iconifyIcon == null || #strings.isEmpty(skill.iconifyIcon))}" class="skill-icon" th:classappend="${skill.icon != null ? 'skill-icon-' + skill.icon : ''}" th:style="${skill.iconColor != null && !#strings.isEmpty(skill.iconColor) ? 'background:' + skill.iconColor : ''}">
             <span th:if="${skill.icon == 'ts'}">TS</span>
             <svg th:if="${skill.icon == 'js'}" viewBox="0 0 24 24" fill="currentColor"><path d="M0 0h24v24H0V0zm22.034 18.276c-.175-1.095-.888-2.015-3.003-2.873-.736-.345-1.554-.585-1.797-1.14-.091-.33-.105-.51-.046-.705.15-.646.915-.84 1.515-.66.39.12.75.42.976.9 1.034-.676 1.034-.676 1.755-1.125-.27-.42-.404-.601-.586-.78-.63-.705-1.469-1.065-2.834-1.034l-.705.089c-.676.165-1.32.525-1.71 1.005-1.14 1.291-.811 3.541.569 4.471 1.365 1.02 3.361 1.244 3.616 2.205.24 1.17-.87 1.545-1.966 1.41-.811-.18-1.26-.586-1.755-1.336l-1.83 1.051c.21.48.45.689.81 1.109 1.74 1.756 6.09 1.666 6.871-1.004.029-.09.24-.705.074-1.65l.046.067zm-8.983-7.245h-2.248c0 1.938-.009 3.864-.009 5.805 0 1.232.063 2.363-.138 2.711-.33.689-1.18.601-1.566.48-.396-.196-.597-.466-.83-.855-.063-.105-.11-.196-.127-.196l-1.825 1.125c.305.63.75 1.172 1.324 1.517.855.51 2.004.675 3.207.405.783-.226 1.458-.691 1.811-1.411.51-.93.402-2.07.397-3.346.012-2.054 0-4.109 0-6.179l.004-.056z"/></svg>
             <svg th:if="${skill.icon == 'react'}" viewBox="0 0 24 24" fill="currentColor"><path d="M12 13.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm0-12c-.56 0-1.1.04-1.62.11-.18.02-.35.05-.52.08C8.06 2.01 6.72 3.2 5.7 4.8c-.4.63-.74 1.32-1.02 2.05-.1.26-.19.52-.27.79-.7-.12-1.36-.18-1.97-.18C1.09 7.46 0 8.04 0 9c0 .96 1.09 1.54 2.44 1.54.61 0 1.27-.06 1.97-.18.08.27.17.53.27.79.28.73.62 1.42 1.02 2.05 1.02 1.6 2.36 2.79 4.16 3.11.17.03.34.06.52.08.52.07 1.06.11 1.62.11s1.1-.04 1.62-.11c.18-.02.35-.05.52-.08 1.8-.32 3.14-1.51 4.16-3.11.4-.63.74-1.32 1.02-2.05.1-.26.19-.52.27-.79.7.12 1.36.18 1.97.18 1.35 0 2.44-.58 2.44-1.54 0-.96-1.09-1.54-2.44-1.54-.61 0-1.27.06-1.97.18-.08-.27-.17-.53-.27-.79-.28-.73-.62-1.42-1.02-2.05-1.02-1.6-2.36-2.79-4.16-3.11-.17-.03-.34-.06-.52-.08A10.4 10.4 0 0 0 12 1.5z"/></svg>
@@ -415,6 +436,7 @@
                target="_blank"
                rel="noopener">
               <!-- Iconify 图标（优先） -->
+              <span class="custom-icon-slot" th:attr="data-icon-image=${link.customImage},data-icon-svg=${link.customSvg}"></span>
               <span th:if="${link.iconifyIcon != null && !#strings.isEmpty(link.iconifyIcon)}" class="iconify" th:attr="data-icon=${link.iconifyIcon}" data-width="20" data-height="20"></span>
               <!-- 内置图标（fallback） -->
               <th:block th:if="${link.iconifyIcon == null || #strings.isEmpty(link.iconifyIcon)}">
@@ -439,8 +461,8 @@
       <div class="contact-signature" th:with="signature=${theme.config.about?.contactConfig?.signature != null ? theme.config.about.contactConfig.signature : 'Wang xin yang'}"
            th:if="${theme.config.about?.contactConfig?.signature == null or !#strings.isEmpty(#strings.trim(theme.config.about.contactConfig.signature))}">
         <svg viewBox="0 0 440 100" role="img" th:attr="aria-label=${signature}" preserveAspectRatio="xMaxYMid meet">
-          <text class="contact-signature-text" x="10" y="68" th:text="${signature}">Wang xin yang</text>
-          <path class="contact-signature-flourish" d="M12 82 Q180 72 420 80" pathLength="1" />
+          <text class="contact-signature-text" x="10" y="68" fill="currentColor" font-size="56" font-family="cursive" th:text="${signature}">Wang xin yang</text>
+          <path class="contact-signature-flourish" d="M12 82 Q180 72 420 80" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" pathLength="1" />
         </svg>
       </div>
     </div>

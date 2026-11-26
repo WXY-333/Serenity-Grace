@@ -160,3 +160,7 @@
 @media (prefers-reduced-motion: reduce) {
   .archive-profile, .archive-profile *, .archive-profile *::before, .archive-profile *::after { animation: none !important; transition: none !important; }
 }
+
+/* Use the same social-logo source and dimensions as the built-in icons. */
+.archive-profile-contact .custom-icon-slot { width: 100%; height: 100%; align-items: center; justify-content: center; }
+.archive-profile-social .archive-profile-contact .custom-icon-slot .serenity-custom-icon { width: 7.89474cqw !important; height: 7.89474cqw !important; object-fit: contain; display: block; }

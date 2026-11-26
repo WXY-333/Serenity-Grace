@@ -3214,3 +3214,9 @@ halo-comment::part(button):hover {
       opacity: 1;
     }
   }
+
+/* Custom image/SVG icon slots keep the original icon's layout. */
+.custom-icon-slot { display: none; align-items: center; justify-content: center; flex-shrink: 0; }
+.contact-link .custom-icon-slot, .social-link .custom-icon-slot { font-size: 20px; }
+.archive-profile-social .custom-icon-slot { width: 100%; height: 100%; }
+.archive-profile-social .custom-icon-slot img { width: 55% !important; height: 55% !important; }

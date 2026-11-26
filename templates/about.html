@@ -55,6 +55,7 @@
   <script th:src="@{/assets/js/about-signature.js}" defer></script>
   <script th:src="@{/assets/js/about-weather.js}" defer></script>
   <script th:src="@{/assets/js/about-switch.js}" defer></script>
+  <script type="module" th:src="@{/assets/js/about-background.js}"></script>
   <script type="module" th:src="@{/assets/js/about-stats.js}"></script>
   <script th:if="${theme.config.about?.effectsCards?.enabled == true}" th:src="@{/assets/js/about-effects.js}" th:attr="data-vendor-base=@{/assets/js/about-effects-vendor/}" defer></script>
   <!-- PJAX：页面脚本置于 content 内，随局部刷新重新执行 -->

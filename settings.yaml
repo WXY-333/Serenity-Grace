@@ -1475,11 +1475,13 @@ spec:
               name: statsBackground
               key: serenity_about_site_stats_background
               if: $get(about_site_display).value == 'stats' || $get(about_site_display).value == 'combined'
-              label: 本站统计背景图
+              label: 本站统计背景
               accepts:
                 - image/*
+                - video/mp4
+                - video/webm
               value: ""
-              help: 从附件库选择背景图，自适应填充；留空使用主题内置 about-weather.jpg。
+              help: 支持图片、GIF 动图和 MP4/WebM 视频，自适应填充；视频静音循环播放，留空使用内置背景。
             - $formkit: text
               name: location
               key: serenity_about_site_location
@@ -1498,11 +1500,13 @@ spec:
               name: background
               key: serenity_about_site_background
               if: $get(about_site_display).value == 'weather' || $get(about_site_display).value == 'combined'
-              label: 天气卡片背景图
+              label: 天气卡片背景
               accepts:
                 - image/*
+                - video/mp4
+                - video/webm
               value: ""
-              help: 留空使用主题内置的示范背景图。
+              help: 支持图片、GIF 动图和 MP4/WebM 视频；视频静音循环播放，留空使用内置背景。
         - $formkit: group
           name: skillsConfig
           label: 技能列表

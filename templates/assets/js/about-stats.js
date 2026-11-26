@@ -1,4 +1,5 @@
 import * as THREE from "./stats-vendor/three.module.js";
+import { isVideo, backgroundVideo, releaseVideo, gifBackground } from "./about-background.js";
 
 /* ================================================================
    Liquid Glass  –  metaball refraction over typography
@@ -11,6 +12,7 @@ const MAX_FRAME_DT_MS = 100;
 const MAX_CATCHUP = 6;
 
 /* ── Renderer ───────────────────────────────────────────── */
+function initStatisticsBackground() {
 const app = document.querySelector(".stats-bubbles");
 if (app && !app.dataset.ready) {
 try {
@@ -49,27 +51,60 @@ const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 /* ── Background typography texture ──────────────────────── */
 const bgCanvas = document.createElement("canvas");
 const bgCtx = bgCanvas.getContext("2d");
-const bgTexture = new THREE.CanvasTexture(bgCanvas);
+let bgTexture = new THREE.CanvasTexture(bgCanvas);
+let backgroundUniform;
 bgTexture.minFilter = THREE.LinearFilter;
 bgTexture.magFilter = THREE.LinearFilter;
 
-let backgroundImage;
+let backgroundImage, animatedBackground, videoBackground, lastMediaTime = -1;
+const backgroundAbort = new AbortController();
 const backgroundUrl = app.dataset.background || new URL('../images/about-weather.jpg', import.meta.url).href;
-const image = new Image();
-image.crossOrigin = 'anonymous';
-image.onload = () => {
-  if (disposed) return;
-  backgroundImage = image;
-  drawBackground();
-};
-image.onerror = () => { /* Keep the gradient if an attachment cannot be loaded with CORS. */ };
-image.src = backgroundUrl;
+const mediaPath = new URL(backgroundUrl, location.href).pathname;
+if (isVideo(backgroundUrl)) {
+  videoBackground = backgroundVideo(backgroundUrl, true);
+  videoBackground.addEventListener('loadeddata', () => {
+    if (disposed) return;
+    backgroundImage = videoBackground;
+    drawBackground();
+  }, { signal: backgroundAbort.signal });
+  const resume = () => { if (!document.hidden) videoBackground.play().catch(() => {}); };
+  document.addEventListener('pointerdown', resume, { signal: backgroundAbort.signal });
+  resume();
+} else {
+  const image = new Image();
+  image.crossOrigin = 'anonymous';
+  image.onload = () => {
+    if (disposed || animatedBackground) return;
+    backgroundImage = image;
+    drawBackground();
+  };
+  image.src = backgroundUrl;
+  if (/\.gif$/i.test(mediaPath)) {
+    gifBackground(backgroundUrl, backgroundAbort.signal).then(media => {
+      if (disposed) return;
+      animatedBackground = media;
+      backgroundImage = media.source;
+      media.update(performance.now());
+      drawBackground();
+    }).catch(() => { /* Retain the static image if GIF decoding/CORS fails. */ });
+  }
+}
 
 function drawBackground() {
   const w = renderer.domElement.width;
   const h = renderer.domElement.height;
-  bgCanvas.width = w;
-  bgCanvas.height = h;
+  if (!w || !h) return;
+  if (bgCanvas.width !== w || bgCanvas.height !== h) {
+    bgCanvas.width = w;
+    bgCanvas.height = h;
+    // Reallocate GPU storage when the canvas dimensions change.
+    const previousTexture = bgTexture;
+    bgTexture = new THREE.CanvasTexture(bgCanvas);
+    bgTexture.minFilter = THREE.LinearFilter;
+    bgTexture.magFilter = THREE.LinearFilter;
+    if (backgroundUniform) backgroundUniform.value = bgTexture;
+    previousTexture.dispose();
+  }
 
   const light = document.documentElement.dataset.theme === 'light';
   const palette = light ? ['#edf5f8', '#d3e5ef', '#c2d9e8', '#afcbdc'] : ['#393541', '#303947', '#293445', '#232c3b'];
@@ -82,10 +117,12 @@ function drawBackground() {
   bgCtx.fillStyle = grd;
   bgCtx.fillRect(0, 0, w, h);
 
-  if (backgroundImage) {
+  if (backgroundImage && (!videoBackground || videoBackground.readyState >= 2)) {
     // Cover the canvas without distorting the attachment's aspect ratio.
-    const factor = Math.max(w / backgroundImage.naturalWidth, h / backgroundImage.naturalHeight);
-    const iw = backgroundImage.naturalWidth * factor, ih = backgroundImage.naturalHeight * factor;
+    const width = backgroundImage.videoWidth || backgroundImage.naturalWidth || backgroundImage.width;
+    const height = backgroundImage.videoHeight || backgroundImage.naturalHeight || backgroundImage.height;
+    const factor = Math.max(w / width, h / height);
+    const iw = width * factor, ih = height * factor;
     bgCtx.drawImage(backgroundImage, (w - iw) / 2, (h - ih) / 2, iw, ih);
     const tint = bgCtx.createLinearGradient(0, 0, w, h);
     tint.addColorStop(0, light ? 'rgba(67,141,203,.28)' : 'rgba(15,48,94,.46)');
@@ -325,6 +362,7 @@ const mat = new THREE.ShaderMaterial({
     uTime: { value: 0 },
   },
 });
+backgroundUniform = mat.uniforms.uBg;
 scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat));
 
 /* ── Input ──────────────────────────────────────────────── */
@@ -349,14 +387,28 @@ renderer.domElement.addEventListener("pointerleave", () => {
   mouse.down = false;
 });
 
-const resizeObserver = new ResizeObserver(() => {
-  if (disposed) return;
+let resizePending = true;
+function syncRenderSize() {
+  if (!resizePending || disposed) return;
   fitMobileHeight();
-  renderer.setSize(app.clientWidth, app.clientHeight);
-  aspect = app.clientWidth / app.clientHeight;
+  const width = app.clientWidth, height = app.clientHeight;
+  // A responsive layout can briefly collapse while changing breakpoints.
+  if (width < 1 || height < 1) return;
+  resizePending = false;
+  const ratio = Math.min(2, devicePixelRatio || 1);
+  if (renderer.getPixelRatio() !== ratio) renderer.setPixelRatio(ratio);
+  renderer.setSize(width, height);
+  aspect = width / height;
   mat.uniforms.uRes.value.set(renderer.domElement.width, renderer.domElement.height);
   drawBackground();
-});
+  lastMediaTime = -1;
+  const bounds = app.getBoundingClientRect();
+  visible = bounds.bottom > 0 && bounds.right > 0 && bounds.top < innerHeight && bounds.left < innerWidth;
+  paused = document.hidden || !visible;
+}
+const resizeObserver = new ResizeObserver(() => { resizePending = true; });
+window.addEventListener('resize', () => { resizePending = true; }, { signal: events.signal });
+window.visualViewport?.addEventListener('resize', () => { resizePending = true; }, { signal: events.signal });
 resizeObserver.observe(app);
 const statsPanel = app.closest('.about-card');
 if (statsPanel) resizeObserver.observe(statsPanel);
@@ -633,11 +685,21 @@ visibility.observe(app);
 
 (function loop() {
   if (disposed) return;
+  syncRenderSize();
   if (paused) {
+    if (videoBackground && !videoBackground.paused) videoBackground.pause();
     frame = requestAnimationFrame(loop);
     return;
   }
   const now = performance.now();
+  if (animatedBackground?.update(now)) drawBackground();
+  if (videoBackground) {
+    if (videoBackground.paused) videoBackground.play().catch(() => {});
+    if (videoBackground.readyState >= 2 && videoBackground.currentTime !== lastMediaTime) {
+      lastMediaTime = videoBackground.currentTime;
+      drawBackground();
+    }
+  }
   const dt = Math.min(now - last, MAX_FRAME_DT_MS);
   last = now;
   acc += dt;
@@ -659,6 +721,10 @@ visibility.observe(app);
 function dispose() {
   disposed = true;
   cancelAnimationFrame(frame);
+  backgroundAbort.abort();
+  if (videoBackground) releaseVideo(videoBackground);
+  animatedBackground = null;
+  backgroundImage = null;
   events.abort();
   app.parentElement.classList.remove("has-liquid-lens");
   resizeObserver.disconnect();
@@ -671,3 +737,7 @@ function dispose() {
 if (typeof window.__pjaxOnLeave === 'function') window.__pjaxOnLeave(dispose);
 } catch (error) { app.dataset.unavailable = 'true'; }
 }
+
+}
+initStatisticsBackground();
+(window.__pjaxPageInit = window.__pjaxPageInit || []).push(initStatisticsBackground);

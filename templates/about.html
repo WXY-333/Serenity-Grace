@@ -118,12 +118,12 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
         关于本站
       </h2>
-      <div class="about-content" th:classappend="${theme.config.about?.aboutSiteConfig?.display == 'weather' ? 'has-weather' : ''}">
+      <div class="about-content" >
         <div class="about-text" style="white-space: pre-line;" th:text="${theme.config.about != null && theme.config.about.aboutSiteConfig != null ? theme.config.about.aboutSiteConfig.aboutSite : ''}">
           <p>嗨，欢迎来到我的小站。这里是我记录技术探索、分享生活感悟的地方。</p>
           <p>作为一名前端开发者，我热衷于探索新技术，追求简洁优雅的代码。工作之余，我喜欢折腾各种有趣的项目，也会在这里分享一些心得。</p>
         </div>
-        <div th:class="${theme.config.about?.aboutSiteConfig?.display == 'combined' ? 'about-switch' : 'about-single'}" th:remove="${theme.config.about?.aboutSiteConfig?.display == 'combined' ? 'none' : 'tag'}" tabindex="0" role="group" aria-label="本站统计与天气，左右拖动或按方向键切换">
+        <div th:class="${theme.config.about?.aboutSiteConfig?.display == 'combined' || theme.config.about?.aboutSiteConfig?.display == 'weather' ? 'about-switch' : 'about-single'}" th:remove="${theme.config.about?.aboutSiteConfig?.display == 'combined' || theme.config.about?.aboutSiteConfig?.display == 'weather' ? 'none' : 'tag'}" tabindex="0" role="group" aria-label="本站统计与天气，左右拖动或按方向键切换">
         <div class="about-stats" th:if="${theme.config.about?.aboutSiteConfig?.display == null || theme.config.about.aboutSiteConfig.display == 'stats' || theme.config.about?.aboutSiteConfig?.display == 'combined'}">
           <div class="stats-bubbles" aria-hidden="true" th:attr="data-background=${!#strings.isEmpty(theme.config.about?.aboutSiteConfig?.statsBackground) ? theme.config.about.aboutSiteConfig.statsBackground : '/themes/theme-Serenity/assets/images/about-weather.jpg'}"></div>
           <div class="stat-item">

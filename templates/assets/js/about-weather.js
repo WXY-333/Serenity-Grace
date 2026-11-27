@@ -53,6 +53,34 @@
   resize();
   const key = card.dataset.key, location = (card.dataset.location || '北京').trim();
   const abort = new AbortController();
+  const scene = card.querySelector('.aw-scene');
+  const pointerTilt = matchMedia('(hover: hover) and (pointer: fine)');
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  let tiltBounds;
+  function resetTilt() {
+    scene?.classList.remove('is-pointer-tilting');
+    scene?.style.removeProperty('--aw-tilt-x');
+    scene?.style.removeProperty('--aw-tilt-y');
+    tiltBounds = null;
+  }
+  scene?.addEventListener('pointerenter', () => {
+    tiltBounds = scene.getBoundingClientRect();
+  }, { signal: abort.signal });
+  scene?.addEventListener('pointermove', event => {
+    if (!pointerTilt.matches || reducedMotion.matches || event.pointerType === 'touch' || event.buttons || combined?.classList.contains('is-dragging')) {
+      resetTilt(); return;
+    }
+    const bounds = tiltBounds || scene.getBoundingClientRect();
+    const x = Math.max(-1, Math.min(1, (event.clientX - bounds.left) / bounds.width * 2 - 1));
+    const y = Math.max(-1, Math.min(1, (event.clientY - bounds.top) / bounds.height * 2 - 1));
+    scene.classList.add('is-pointer-tilting');
+    scene.style.setProperty('--aw-tilt-x', `${-y * 8}deg`);
+    scene.style.setProperty('--aw-tilt-y', `${x * 8}deg`);
+  }, { signal: abort.signal });
+  for (const event of ['pointerleave', 'pointercancel', 'pointerdown']) {
+    scene?.addEventListener(event, resetTilt, { signal: abort.signal });
+  }
+  window.addEventListener('resize', resetTilt, { signal: abort.signal });
   const status = card.querySelector('.aw-status');
   const field = name => card.querySelector(`[data-aw="${name}"]`);
   const cacheKey = `serenity-about-weather:${location}:${key || ''}`;

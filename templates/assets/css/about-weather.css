@@ -4,8 +4,8 @@
 .about-weather { position: absolute; right: var(--space-6); top: 50%; transform: translateY(-50%); width: 36%; height: 200px; overflow: hidden; }
 .aw-shell { position: absolute; width: 670px; height: 400px; transform: scale(var(--aw-scale, .6)); transform-origin: top right; right: 0; border-radius: 25px; box-shadow: 0 0 70px -10px #0003; background: #222831; color: #fff; font-family: inherit; line-height: 1.25; }
 .aw-shell * { box-sizing: border-box; }
-.aw-scene { position: relative; height: 100%; width: 44.77612%; border-radius: 25px; float: left; box-shadow: 0 0 20px -10px #0003; transition: transform 300ms ease; transform: translateZ(0) scale(1.02) perspective(1000px); z-index: 1; }
-.aw-scene:hover { transform: scale(1.1) perspective(1500px) rotateY(10deg); }
+.aw-scene { position: relative; height: 100%; width: 44.77612%; border-radius: 25px; float: left; box-shadow: 0 0 20px -10px #0003; transition: transform 300ms ease; transform: perspective(1000px) rotateX(var(--aw-tilt-x, 0deg)) rotateY(var(--aw-tilt-y, 0deg)); z-index: 1; }
+
 .aw-background { position: absolute; inset: 0; display: block; width: 100%; height: 100%; min-width: 100%; min-height: 100%; max-width: none; max-height: none; object-fit: cover; object-position: center; border-radius: 25px; pointer-events: none; }
 .aw-scene::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, #72edf2 10%, #5151e5 100%); opacity: .8; border-radius: 25px; }
 .aw-date, .aw-current { position: absolute; z-index: 1; left: 25px; display: grid; }
@@ -84,12 +84,12 @@
   .about-weather { margin-bottom: calc(0px - var(--space-6) - 1px); }
 }
 
-/* Larger location text and the original demo's scene transform. */
+/* Larger location text and pointer-position scene tilt. */
 .aw-date { font-size: 19px; }
 .aw-date strong { font-size: 28px; }
 .aw-location svg { width: 21px; height: 21px; }
-.aw-scene { transform: translateZ(0) scale(1.02) perspective(1000px); }
-.aw-scene:hover { transform: scale(1.1) perspective(1500px) rotateY(10deg); }
+.aw-scene { transform: perspective(1000px) rotateX(var(--aw-tilt-x, 0deg)) rotateY(var(--aw-tilt-y, 0deg)); }
+
 @media (max-width: 900px) {
   .aw-shell { height: 160px; }
   .aw-date { top: 22px; font-size: 18px; }
@@ -136,3 +136,19 @@
 [data-theme="light"] .about-switch { border-color: rgba(0,0,0,.04); }
 @media(max-width:900px) { .about-switch { position: relative; flex-basis: auto; align-self: flex-start; margin: 0; } }
 @media(max-width:768px) { .about-switch { width: 100%; } }
+
+/* Keep the pointer-position tilt visible throughout its return animation.
+   Clipping follows carousel movement, never the pointer entering/leaving. */
+.about-switch:not(.is-dragging):not(.is-switching):has(> .about-weather[aria-hidden="false"]) {
+  overflow: visible;
+  z-index: 2;
+}
+.about-switch:not(.is-dragging):not(.is-switching) > .about-weather[aria-hidden="false"] {
+  overflow: visible;
+}
+.about-switch:not(.is-dragging):not(.is-switching):has(> .about-weather[aria-hidden="false"]) > [aria-hidden="true"] {
+  visibility: hidden;
+}
+
+.aw-scene.is-pointer-tilting { transition: transform 100ms ease-out; }
+@media (prefers-reduced-motion: reduce) { .aw-scene.is-pointer-tilting { transition: none; } }

@@ -3,10 +3,10 @@
   const host = document.querySelector('.about-switch');
   if (!host || host.dataset.ready) return;
   host.dataset.ready = 'true';
-  const slides = [host.querySelector('.about-stats'), host.querySelector('.about-weather')];
+  const slides = [host.querySelector('.about-stats'), host.querySelector('.about-weather')].filter(Boolean);
   const abort = new AbortController();
-  let index = 0, gesture = null, suppressUntil = 0, side = 1;
-  try { index = localStorage.getItem('serenity-about-component') === 'weather' ? 1 : 0; } catch (_) {}
+  let index = 0, gesture = null, suppressUntil = 0, side = 1, switchingTimer;
+  try { index = slides.length > 1 && localStorage.getItem('serenity-about-component') === 'weather' ? 1 : 0; } catch (_) {}
   function render(offset = 0) {
     slides.forEach((slide, i) => {
       slide.style.setProperty('--slide-x', `${(i === index ? 0 : side * host.clientWidth) + offset}px`);
@@ -15,10 +15,14 @@
     });
   }
   function select(next) {
+    clearTimeout(switchingTimer);
+    host.classList.add('is-switching');
+    switchingTimer = setTimeout(() => host.classList.remove('is-switching'), 380);
     index = ((next % 2) + 2) % 2;
     try { localStorage.setItem('serenity-about-component', index ? 'weather' : 'stats'); } catch (_) {}
     render();
   }
+  if (slides.length > 1) {
   host.addEventListener('pointerdown', event => {
     if (!event.isPrimary || event.button !== 0) return;
     gesture = { id: event.pointerId, x: event.clientX, y: event.clientY, dx: 0, dragging: false };
@@ -68,6 +72,11 @@
       event.preventDefault(); select(index + (event.key === 'ArrowRight' ? 1 : -1));
     }
   }, { signal: abort.signal });
+  } else {
+    host.removeAttribute('tabindex');
+    host.removeAttribute('aria-label');
+    host.classList.add('is-single');
+  }
   function fit() {
     const panel = host.closest('.about-card');
     const title = panel?.querySelector('.about-section-title');
@@ -86,5 +95,5 @@
   const panel = host.closest('.about-card');
   if (panel) observer.observe(panel);
   fit();
-  if (typeof window.__pjaxOnLeave === 'function') window.__pjaxOnLeave(() => { abort.abort(); observer.disconnect(); });
+  if (typeof window.__pjaxOnLeave === 'function') window.__pjaxOnLeave(() => { clearTimeout(switchingTimer); abort.abort(); observer.disconnect(); });
 })();

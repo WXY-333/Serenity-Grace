@@ -152,3 +152,21 @@
 
 .aw-scene.is-pointer-tilting { transition: transform 100ms ease-out; }
 @media (prefers-reduced-motion: reduce) { .aw-scene.is-pointer-tilting { transition: none; } }
+
+/* Mobile forecast selection follows the outer card and reaches its right edge. */
+@media (max-width: 900px) {
+  .about-weather .aw-details {
+    padding: 0 0 0 10px;
+    border-radius: inherit;
+  }
+  .about-weather .aw-forecast {
+    height: 100%;
+    margin: 0;
+    border-radius: inherit;
+  }
+  .about-weather .aw-day {
+    min-height: 0;
+    height: 100%;
+    border-radius: inherit;
+  }
+}
